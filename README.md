@@ -52,22 +52,22 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
  2. Making virtual genomes
  
   ```python
-   python3 make_virtual_genomes.py -y config.yaml
+   python3 01_make_virtual_genomes.py -y config.yaml
    ```
  3. Filter reads and compare to virtual genomes
  
   ```python
-   python3 map_to_virtual_genomes.py -y config.yaml
+   python3 02_map_to_virtual_genomes.py -y config.yaml
    ```
  4. Find RPF-covered region on junction
  
   ```python
-   python3 find_RCRJ.py -y config.yaml
+   python3 03_find_RCRJ.py -y config.yaml
    ```
  5. Classification of RCRJ by sequence features
  
   ```python
-   python3 classify_RCRJ.py -y config.yaml
+   python3 04_classify_RCRJ.py -y config.yaml
    ```
 ### Contact us
 
