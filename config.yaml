@@ -1,0 +1,64 @@
+# #######   CircCode-cofig-file   #######
+# This configuration file includes all possible options and files for CircCode.
+# Please input full path as well as for running all process.
+# You can submit your question by submitting issue on github or sending an e-mail
+
+# Version = 1.0
+# E-mail = sps@snnu.edu.cn
+# Date = 20 July 2018
+
+# The name of genome
+genome_name: virGenome
+
+#################
+# required data #
+#################
+
+# The path of genome file
+genome_fasta: /full/path/to/genome/file.fa
+
+# The path of gtf file of genome
+genome_gtf: /full/path/to/gff/file.gff
+
+# The path of ribo-seq raw reads file
+raw_reads:
+           - /full/path/to/raw/reads_1.sra
+           - /full/path/to/raw/reads_2.sra
+           - /full/path/to/raw/reads_3.sra
+           - /full/path/to/raw/reads_4.sra
+
+# The path of ribosome sequence file
+ribosome_fasta: /full/path/to/rRNA/file.fa
+
+# The path of trimmomatic.jar
+trimmomatic_jar: /full/path/to/Trimmomatic-0.38/trimmomatic-0.38.jar
+
+# The path of Candidate circRNA
+circrnas: /full/path/to/Candidate/circRNA.fa
+
+# The path of adapters file
+riboseq_adapters: /full/path/to/riboseq-adapters.fa
+
+#####################
+# Required location #
+#####################
+
+# The path of folder for storing the final result
+result_file_location: /full/path/to/result_file
+
+# The path of folder for storing temporary results
+tmp_file_location: /full/path/to/tmp_file
+
+#################
+# OTHER OPTIONS #
+#################
+
+# The type of reads, please input single or pair
+reads_type: single
+
+# Coverage counts, DEFAULT = 10.
+coverage_counts: 10
+
+# The thread to run tophat2 and SEPCtr, DEFAULT = 6
+thread: 6
+
