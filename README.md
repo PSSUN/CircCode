@@ -1,0 +1,74 @@
+# CircCode
+
+### Introduction
+
+CircCode is a Python3-base pipeline for translated circular RNA identification. It automatically tandem links sequence in series and processes a given ribosome profile data (including quality control, filtering and alignment). Finally, based on random forest and J48 classification, the final translated circular RNA was predicted. The user only needs to ***fill in the given configuration file*** and ***run a python script*** to get the predicted translated circular RNA.
+
+### Requirement
+
+#### Data:
+
+- Genome sequence(fasta format)
+- Annotation file (gtf format)
+- Candidate circRNA sequence (fasta/bed format)
+- rRNA sequence (fasta format)
+- Adapter sequence(fasta format)
+- Ribosome profiling data (sra format)
+
+#### Software:
+
+- bedtools (v.2.26.0+): (https://bedtools.readthedocs.io/en/latest/)
+- bowtie (v.1.2.2+): (http://bowtie-bio.sourceforge.net/index.shtml)
+- TopHat2 (v.2.1.1+): (http://ccb.jhu.edu/software/tophat/index.shtml)
+- Python3 (v.3.6.5+): (https://www.python.org/)
+- R language (v.3.4.4+): (https://www.r-project.org/)
+
+#### python3 package:
+
+- Biopython (v.1.72+): (https://pypi.org/project/biopython/)
+- Pandas (v.0.23.3+): (https://pypi.org/project/pandas/)
+
+#### R package:
+
+- BASiNET: (https://github.com/cran/BASiNET)
+- Seqinr: (https://cran.r-project.org/web/packages/seqinr/index.html)
+
+### Usage
+
+##### - You can run all CircCode pipeline by one script
+
+1. Fill the config file (config.yaml), input full path of each required file.
+
+2. Run python3 script on command line  with your config file.
+
+ ```python
+   python3 run_CircCode_pipeline.py -y config.yaml
+   ```
+   
+##### - Or you can run CircCode step by step
+
+ 1. Fill the config file (config.yaml), input full path of each required file.
+ 
+ 2. Making virtual genomes
+ 
+  ```python
+   python3 make_virtual_genomes.py -y config.yaml
+   ```
+ 3. Filter reads and compare to virtual genomes
+ 
+  ```python
+   python3 map_to_virtual_genomes.py -y config.yaml
+   ```
+ 4. Find RPF-covered region on junction
+ 
+  ```python
+   python3 find_RCRJ.py -y config.yaml
+   ```
+ 5. Classification of RCRJ by sequence features
+ 
+  ```python
+   python3 classify_RCRJ.py -y config.yaml
+   ```
+### Contact us
+
+If you encounter any problems while using CircCode, please send an email (sps@snnu.edu.cn) or submit the issues on GitHub (https://github.com/Sunpeisen/circCode/issues) and we will resolve it as soon as possible.
