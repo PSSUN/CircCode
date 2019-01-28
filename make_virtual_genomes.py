@@ -84,7 +84,7 @@ class Genome(object):
 
         # Dump junction into tem file
         pickle.dump(self.junction, open('{}/junction'.format(tmp_file_location), 'wb'))
-        pickle.dump(self.junction_name_dic, open('junction_name_dic', 'wb'))
+        pickle.dump(self.junction_name_dic, open('{}/junction_name_dic'.format(tmp_file_location), 'wb'))
 
     def make_gff_file(self):
         self.gff = pd.DataFrame()
@@ -121,6 +121,8 @@ def main():
     tmp_file_location = fileload['tmp_file_location']
     circrnas = fileload['circrnas']
     name = fileload['genome_name']
+    
+    
     info = Genome(circrnas)
     info.make_genome(tmp_file_location)
     info.make_gff_file()
