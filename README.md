@@ -59,7 +59,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
   ```python
    python3 map_to_virtual_genomes.py -y config.yaml
    ```
- 4. Find RPF-covered region on junction
+ 4. Find RPF-covered region on junction (RCRJ)
  
   ```python
    python3 find_RCRJ.py -y config.yaml
