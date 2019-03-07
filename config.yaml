@@ -24,8 +24,6 @@ genome_gtf: /full/path/to/gff/file.gff
 raw_reads:
            - /full/path/to/raw/reads_1.sra
            - /full/path/to/raw/reads_2.sra
-           - /full/path/to/raw/reads_3.sra
-           - /full/path/to/raw/reads_4.sra
 
 # The path of ribosome sequence file
 ribosome_fasta: /full/path/to/rRNA/file.fa
@@ -38,6 +36,12 @@ circrnas: /full/path/to/Candidate/circRNA.fa
 
 # The path of adapters file
 riboseq_adapters: /full/path/to/riboseq-adapters.fa
+
+# Coding sequence
+coding_seq: /full/path/to/coding_sequence.fa
+
+# Non-coding sequence
+non_coding_seq: /full/path/to/non_coding_sequence.fa
 
 #####################
 # Required location #
