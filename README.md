@@ -14,7 +14,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 - rRNA sequence (fasta format)
 - Adapter sequence(fasta format)
 - Ribosome profiling data (sra format)
-
+- Coding and non-coding sequence(fasta format)
 #### Software:
 
 - bedtools (v.2.26.0+): (https://bedtools.readthedocs.io/en/latest/)
