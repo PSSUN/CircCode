@@ -43,32 +43,35 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 
  ```python
    python3 run_CircCode_pipeline.py -y config.yaml
-   ```
-   
+ ```
+
 ##### - Or you can run CircCode step by step
 
- 1. Fill the config file (https://github.com/Sunpeisen/CircCode/blob/master/config.yaml), input full path of each required file.
- 
- 2. Making virtual genomes
- 
+  1. Fill the config file (https://github.com/Sunpeisen/CircCode/blob/master/config.yaml), input full path of each required file.
+
+  2. Making virtual genomes
+
   ```python
    python3 make_virtual_genomes.py -y config.yaml
-   ```
- 3. Filter reads and compare to virtual genomes
- 
+  ```
+  3. Filter reads and compare to virtual genomes
+
   ```python
    python3 map_to_virtual_genomes.py -y config.yaml
-   ```
- 4. Find RPF-covered region on junction (RCRJ)
- 
+  ```
+  4. Find RPF-covered region on junction (RCRJ) and classification of RCRJ by sequence features
+
   ```python
-   python3 find_RCRJ.py -y config.yaml
-   ```
- 5. Classification of RCRJ by sequence features
- 
-  ```python
-   python3 classify_RCRJ.py -y config.yaml
-   ```
+   python3 find_RCRJ_and_classify.py -y config.yaml
+  ```
+  5. Find longest peptide of translated circRNA
+
+```
+   python3 find_longest_pep.py -y config.yaml
+```
+
+
+
 ### Contact us
 
 If you encounter any problems while using CircCode, please send an email (sps@snnu.edu.cn) or submit the issues on GitHub (https://github.com/Sunpeisen/circCode/issues) and we will resolve it as soon as possible.
