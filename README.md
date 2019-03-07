@@ -74,4 +74,4 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 
 ### Contact us
 
-If you encounter any problems while using CircCode, please send an email (sps@snnu.edu.cn) or submit the issues on GitHub (https://github.com/Sunpeisen/circCode/issues) and we will resolve it as soon as possible.
+If you encounter any problems while using CircCode, please send an email (sps@snnu.edu.cn / glli@snnu.edu.cn) or submit the issues on GitHub (https://github.com/Sunpeisen/circCode/issues) and we will resolve it as soon as possible.
