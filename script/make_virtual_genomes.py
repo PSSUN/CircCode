@@ -1,166 +1,188 @@
-from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-import pandas as pd
+import time
 import subprocess
-import pickle
 import argparse
 import yaml
+import pickle
+import pandas as pd
+from Bio import SeqIO
+from multiprocessing import Pool
 
 
-class Genome(object):
+# make index of genome and ribo-seq reads
+def make_index(genome, ribosome,tmp_file_location):
 
-    def __init__(self, circ_rnas, tmp_file_location):
-        self.circ_rnas = circ_rnas
-        self.genome = ''
-        self.newGenome = []
-        self.circ_name = []
-        self.start = []
-        self.end = []
-        self.increase_length = 0
-        self.junction = []
-        self.gene_type = []
-        self.junction_name_dic = {}
-        self.tmp_file_location = tmp_file_location
+    # genomename = str(genome).split('/')[-1].split('.')[0]
+    ribo_name = str(ribosome).split('/')[-1].split('.')[0]
+    subprocess.call('bowtie-build {} {}/{}'
+                    .format(ribosome, tmp_file_location, ribo_name),
+                    shell=True, stdout=False)
+    subprocess.call('bowtie2-build {} {}/newGenome.fa'
+                    .format(genome, tmp_file_location),
+                    shell=True, stdout=False)
+    print('-' * 50)
+    print(get_time(), 'Make index successfully!')
+    print('-' * 50)
 
-    def make_genome(self):
-        polyN = 'N' * 50
-        n = 1
-        for circrna in self.circ_rnas:
 
-            # The same behavior was repeated three times because they
-            # correspond to genes, transcripts, and exons, respectively.
-            # Writing in this way can look more clear, as well as the following.
+def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapters, tmp_file_location):
+    print(get_time(), 'Start cleaning rawreads...')
+    read_name = raw_read.split('/')[-1].split('.')[-2]
+    ribo_name = str(ribosome).split('/')[-1].split('.')[0]
+    without_rrna_reads = read_name+'.clean.without.rRNA.fastq'
+    print(get_time(), 'Loading reads form', raw_read)
 
-            # gene
-            self.circ_name.append(
-                'gene_id "{}";'
-                ' transcript_id "{}";'
-                ' exon_number "1";'
-                ' gene_name "{}";'
-                ' gene_source "araport11";'
-                ' gene_biotype "protein_coding";'
-                ' transcript_source "araport11";'
-                ' protein_id "{}";'
-                ' protein_version "1";'
-                .format(circrna.id, circrna.id, circrna.id, circrna.id))
+    # Transform sra to fastq format
+    subprocess.call('fastq-dump {} -O {}'
+                    .format(raw_read, tmp_file_location),
+                    shell=True)
 
-            # transcript
-            self.circ_name.append(
-                'gene_id "{}";'
-                ' transcript_id "{}";'
-                ' exon_number "1";'
-                ' gene_name "{}";'
-                ' gene_source "araport11";'
-                ' gene_biotype "protein_coding";'
-                ' transcript_source "araport11";'
-                ' protein_id "{}";'
-                ' protein_version "1";'
-                .format(circrna.id, circrna.id, circrna.id, circrna.id))
+    # Filter out low quality reads by Trimmomatic
+    subprocess.call('java -jar {} SE -phred33 '
+                    '{} {} ILLUMINACLIP:{}:2:30:10 '
+                    'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
+                    .format(trimmomatic, tmp_file_location+'/'+read_name+'.fastq', read_name+'.clean.fastq', riboseq_adapters), shell=True)
 
-            #exon
-            self.circ_name.append(
-                'gene_id "{}";'
-                ' transcript_id "{}";'
-                ' exon_number "1";'
-                ' gene_name "{}";'
-                ' gene_source "araport11";'
-                ' gene_biotype "protein_coding";'
-                ' transcript_source "araport11";'
-                ' protein_id "{}";'
-                ' protein_version "1";'
-                .format(circrna.id, circrna.id, circrna.id, circrna.id))
+    # Map clean reads to ribosome sequence by bowtie
+    subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_rRNA.sam'
+                    .format(thread, without_rrna_reads, tmp_file_location+'/'+ribo_name, read_name+'.clean.fastq', ribo_name),
+                    shell=True)
 
-            # This step aims to cut candidate sequences which are longer than 500bp
-            if len(circrna) <= 500:
-                self.genome += (circrna.seq * 2 + polyN)
-                self.increase_length += len(circrna) * 2 + 100
-            else:
-                self.genome += (circrna.seq[-500:] + circrna.seq[:500] + polyN)
-                self.increase_length += 1050
+    print(get_time(), 'Finished clean process.')
+    global cleanreads
+    cleanreads = without_rrna_reads
 
-            if n == 1:
-                start_position = 1
-                end_position = self.increase_length - 100
-                next_start = self.increase_length + 1
-            else:
-                start_position = next_start
-                end_position = self.increase_length - 100
-                next_start = self.increase_length + 1
-            n += 1
+    genome_name = str(genome).split('/')[-1].split('.')[0]
+    print(get_time(), 'Start mapping...')
+    print('command:')
+    print('tophat2 -p {} -I 1 -o {} {} {}'
+                    .format(thread, tmp_file_location+'/'+read_name+'_tophat_result', tmp_file_location+'/'+genome_name+'.fa', cleanreads))
+    subprocess.call('tophat2 -p {} -I 1 -o {} {} {}'
+                    .format(thread, tmp_file_location+'/'+read_name+'_tophat_result', tmp_file_location+'/'+genome_name+'.fa', cleanreads), shell=True)
+    print(get_time(), 'Finished mapping')
+    print(get_time(), 'Start analysing...')
 
-            if len(circrna) <= 500:
-                jun = int(start_position + len(circrna))
-                self.junction.append(start_position + len(circrna))
-                self.junction_name_dic[jun] = str(circrna.id)
-            else:
-                jun = int(start_position + 1000)
-                self.junction.append(start_position + 1000)
-                self.junction_name_dic[jun] = str(circrna.id)
+    subprocess.call(
+        'bedtools bamtobed -bed12 -i {}/{}_tophat_result/accepted_hits.bam > {}/{}_tophat_result/bamtobed_result.bed'
+            .format(tmp_file_location, read_name, tmp_file_location, read_name),
+        shell=True)
+    subprocess.call(
+        'bedtools merge -i {}/{}_tophat_result/bamtobed_result.bed -c 1 -o count > {}/{}_merge_result'
+            .format(tmp_file_location, read_name, tmp_file_location, read_name),
+        shell=True)
 
-            self.start.append(start_position)
-            self.start.append(start_position)
-            self.start.append(start_position)
 
-            self.end.append(end_position)
-            self.end.append(end_position)
-            self.end.append(end_position)
+def find_reads_on_junction(tmp_file_location, raw_read, circrna):
+    ribo_name = raw_read.split('/')[-1].split('.')[-2]
+    result = pd.DataFrame(columns=['a', 'b', 'c', 'd'])
+    junction_file = tmp_file_location+'/junction'
+    merge_result_file = tmp_file_location+'/{}_merge_result'.format(ribo_name)
 
-            self.gene_type.append('gene')
-            self.gene_type.append('transcript')
-            self.gene_type.append('exon')
+    merge_result = pd.read_csv(merge_result_file, sep='\t', low_memory=True, header=None)
+    merge_result.columns = ['a', 'b', 'c', 'd']
 
-        final_genome = SeqRecord(Seq(str(self.genome)), id='1_CircularRNA', description='DoubleSeqWith50N')
+    junction = pickle.load(open(junction_file, 'rb'))
+    for i in junction:
+        if merge_result.loc[(merge_result.b < i) & (i < merge_result.c)].empty:
+            pass
+        else:
+            print(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
+            result = result.append(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
+    print(result)
+    try:
+        pickle.dump(result, open('RCRJ_result', 'wb'))
+    except:
+        print('Error while dumping RCRJ_result')
+    result.to_csv(tmp_file_location+'/{}_junction_result'
+                  .format(ribo_name), sep='\t', header=0, index=False)
+    # bedtools getfasta
+    junction_result = tmp_file_location+'/{}_junction_result'.format(ribo_name)
+    subprocess.call('bedtools getfasta -s -fi {}+'/'+newGenome.fa -bed {} -split -name | fold -w 60 > {}+'/'+{}_RCRJ.fa'
+                    .format(tmp_file_location, junction_result, tmp_file_location, raw_read), shell=True)
+    # Change ID
+    handle = SeqIO.parse('{}+'/'+{}_RCRJ.fa'.format(tmp_file_location, raw_read), 'fasta')
+    id_dic = pickle.load(open('{}+'/'+junction_name_dic', 'rb'))
 
-        self.newGenome.append(final_genome)
+    dic = {}
+    for i in handle:
+        start = int(i.id.split('1_CircularRNA:')[1].split('-')[0])
+        end = int(i.id.split('1_CircularRNA:')[1].split('-')[1].split('()')[0])
+        dic[start, end] = [i.id]
+    n = 0
+    circRNA_list = []
+    for junction in id_dic:
+        for i in dic:
+            if i[0] < int(junction) < i[1]:
+                n += 1
+                print(n)
+                circRNA_list.append(id_dic[junction])
+    print(circRNA_list)
+    print(len(circRNA_list))
+    pickle.dump(circRNA_list, open('{}+'/'+circRNA_list', 'wb'))
 
-        # Dump junction into tem file
-        pickle.dump(self.junction, open('{}/junction'.format(self.tmp_file_location), 'wb'))
-        pickle.dump(self.junction_name_dic, open('{}/junction_name_dic'.format(self.tmp_file_location), 'wb'))
+    candic_seq = SeqIO.parse('{}'.format(circrna), 'fasta')
+    num = 0
+    tmp = []
+    for i in candic_seq:
+        if i.id in circRNA_list:
+            tmp.append(i)
+            print(i)
+            print(num)
+    SeqIO.write(tmp, '{}_circ.fa'.format(raw_read), 'fasta')
 
-    def make_gff_file(self):
-        self.gff = pd.DataFrame()
-        self.gff['start'] = self.start
-        self.gff['end'] = self.end
-        self.gff['chr'] = 1
-        self.gff['araport11'] = 'araport11'
-        self.gff['type'] = self.gene_type
-        self.gff['.1'] = '.'
-        self.gff['+/-'] = '+'
-        self.gff['.2'] = '.'
-        self.gff['des'] = self.circ_name
 
-        # adjust the order of column of gff
-        self.gff = self.gff[['chr', 'araport11', 'type', 'start', 'end', '.1', '+/-', '.2', 'des']]
+def remove_tmp_file():
+    subprocess.call('mkdir reads', shell=True)
+    subprocess.call('mv *.clean.without.rRNA.fastq ./reads', shell=True)
+    subprocess.call('mkdir result', shell=True)
+    subprocess.call('rm *.fastq', shell=True)
 
-    def to_fasta(self, name):
-        SeqIO.write(self.newGenome, name, 'fasta')
 
-    def to_gff(self, name):
-        self.gff.to_csv(name, sep='\t', header=False, index=False, escapechar='"', doublequote=0)
-        subprocess.call('sed -i \'s/""/"/g\' {}'.format(name), shell=True)
+def get_time():
+    now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+    strnow = '[{tim}]'.format(tim=now)
+    return strnow
+
+
+def filter_and_map_reads():
+    start = time.time()
+    make_index()
+    deal_raw_data()
+    remove_tmp_file()
+    stop = time.time()
+    print(get_time(), 'Finished all pipline')
+    hours = int(int((stop - start) / 60) / 60)
+    print(get_time(), 'Totally run', hours, 'hours')
 
 
 def main():
     parse = argparse.ArgumentParser(description='This script helps to clean reads and map to genome')
     parse.add_argument('-y', dest="yaml", required=True)
-    parse.add_argument('-map-only', dest='map_only', required=False)
     args = parse.parse_args()
 
-    yamlfile = args.yaml
-    file = open(yamlfile)
-    fileload = yaml.load(file)
+    yamlfile  = args.yaml
+    file      = open(yamlfile)
+    fileload  = yaml.load(file)
+    raw_reads = fileload['raw_reads']
+    thread    = fileload['thread']
+    ribosome  = fileload['ribosome_fasta']
+    trimmomatic = fileload['trimmomatic_jar']
+    riboseq_adapters = fileload['riboseq_adapters']
     tmp_file_location = fileload['tmp_file_location']
-    circ_rnas_file = fileload['circrnas']
+    circrna = fileload['circrnas']
     name = fileload['genome_name']
+    genome = '{}/{}.fa'.format(tmp_file_location, name)
 
-    subprocess.call('mkdir {}'.format(tmp_file_location), shell=True)
-    circ_rnas = SeqIO.parse(circ_rnas_file, 'fasta')
-    info = Genome(circ_rnas, tmp_file_location)
-    info.make_genome()
-    info.make_gff_file()
-    info.to_gff('{}/{}.gff'.format(tmp_file_location, name))
-    info.to_fasta('{}/{}.fa'.format(tmp_file_location, name))
+    make_index(genome, ribosome, tmp_file_location)
+
+    # use multiprocess to deal raw reads
+    p = Pool(len(raw_reads))
+    for raw_read in raw_reads:
+        print(raw_read)
+        p.apply_async(deal_raw_data, args=(genome, raw_read, ribosome, thread, trimmomatic,riboseq_adapters,tmp_file_location))
+    p.close()
+    p.join()
+    find_reads_on_junction(tmp_file_location, raw_read, circrna)
+    remove_tmp_file()
 
 
 if __name__ == '__main__':
