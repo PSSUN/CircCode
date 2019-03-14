@@ -33,7 +33,7 @@ class Translate(object):
         SeqIO.write(translated_seqs_2, '/home/sun/sps/At_circcode/tmp_file/RCRJ_translated_2.fa', 'fasta')
         SeqIO.write(translated_seqs_3, '/home/sun/sps/At_circcode/tmp_file/RCRJ_translated_3.fa', 'fasta')
 
-
+#Use R language to call BASiNET to classify sequences.
 def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read):
     tmp = tmp_file_location+'/'+'tmp'
     circ = raw_read+'_circ.fa'
@@ -54,7 +54,7 @@ def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read):
     '''.format(coding_seq, non_coding_seq, tmp, circ, tmp, circ, tmp_file_location+'/'+raw_read+'_translated_circ.fa')
     robjects.r(r_script)
 
-
+# Find the longest peptide that can be translated from the three reading frames
 def find_longest(tmp_file_location, raw_read, result_file_location):
     
     trans_seq = tmp_file_location+'/'+raw_read+'_translated_circ.fa'
