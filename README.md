@@ -41,8 +41,8 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 
 2. Run python3 script on command line  with your config file.
 
- ```python
-   python3 run_CircCode_pipeline.py -y config.yaml
+ ```bash
+   sh one_step_script.sh -y config.yaml
  ```
 
 ##### - Or you can run CircCode step by step
