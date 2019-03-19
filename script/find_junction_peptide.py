@@ -93,6 +93,7 @@ def find_longest(tmp_file_location, raw_read, result_file_location):
         print('step1:', n)
         n+=1
     print('-'*100)
+    
     # peptide_position:{junction_1:[peptide_start_position,peptide_end_position]...}
     peptide_position = {}
     tmp_2 = []
@@ -224,10 +225,12 @@ def main():
     raw_read = fileload['raw_reads']
     result_file_location = fileload['result_file_location']
     classify(coding_seq, non_coding_seq, tmp_file_location, raw_read)
+    
     # Translate
     file = tmp_file_location+'/'+raw_read+'_translated_circ.fa'
     handle = Translate(file)
     handle.translate()
+    
     # Find longest peptide
     find_longest(tmp_file_location, raw_read, result_file_location)
     
