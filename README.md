@@ -2,7 +2,7 @@
 
 ### Introduction
 
-CircCode is a Python3-base pipeline for translated circular RNA identification. It automatically tandem links sequence in series and processes a given ribosome profile data (including quality control, filtering and alignment). Finally, based on random forest and J48 classification, the final translated circular RNA was predicted. The user only needs to ***fill in the given configuration file*** and ***run a python script*** to get the predicted translated circular RNA.
+CircCode is a Python3-base pipeline for translated circular RNA identification. It automatically tandem links sequence in series and processes a given ribosome profile data (including quality control, filtering and alignment). Finally, based on random forest and J48 classification, the final translated circular RNA was predicted. The user only needs to ***fill in the given configuration file*** and ***run the python scripts*** to get the predicted translated circular RNA.
 
 ### Requirement
 
