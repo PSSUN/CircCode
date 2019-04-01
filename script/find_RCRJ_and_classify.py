@@ -2,6 +2,7 @@ import yaml
 import pickle
 import re
 import argparse
+import subprocess
 import rpy2.robjects as robjects
 
 from Bio import SeqIO
@@ -36,10 +37,12 @@ class Translate(object):
 #Use R language to call BASiNET to classify sequences.
 def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read):
     tmp = tmp_file_location+'/'+'tmp'
+    raw_read = raw_read[0]
     circ = raw_read+'_circ.fa'
     r_script = '''
-    library(BASiNET)
     library(seqinr)
+    library(BASiNET)
+    
     lncRNA <- system.file("extdata", "sequences.fasta", package = "BASiNET")
     classification(mRNA='{}',
                    lncRNA='{}', save='{}')
@@ -52,7 +55,12 @@ def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read):
     name <- getName(mRNA_seq)
     write.fasta(mRNA_seq,name,file.out = '{}')
     '''.format(coding_seq, non_coding_seq, tmp, circ, tmp, circ, tmp_file_location+'/'+raw_read+'_translated_circ.fa')
-    robjects.r(r_script)
+    print(r_script)
+    f=open('r_script.r','w')
+    f.write(r_script)
+    f.close()
+    subprocess.call('Rscript r_script.r', shell=True)
+    #robjects.r(r_script)
 
 # Find the longest peptide that can be translated from the three reading frames
 def find_longest(tmp_file_location, raw_read, result_file_location):
