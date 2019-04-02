@@ -35,10 +35,15 @@ class Translate(object):
         SeqIO.write(translated_seqs_3, '/home/sun/sps/At_circcode/tmp_file/RCRJ_translated_3.fa', 'fasta')
 
 #Use R language to call BASiNET to classify sequences.
-def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read):
-    tmp = tmp_file_location+'/'+'tmp'
+def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read, name):
+    tmp = tmp_file_location+'/'+'tmp_file'
     raw_read = raw_read[0]
-    circ = raw_read+'_circ.fa'
+    ribo_name = raw_read.split('/')[-1].split('.')[-2]
+    circ = tmp_file_location+'/'+name+'.fa'
+
+    #getfasta
+    subprocess.call('bedtools getfasta -s -fi {} -bed {}  -split -name | fold -w 60 > {}'
+    .format(tmp_file_location,tmp_file_location+ribo_name+'_junction_result',tmp_file_location+'RCRJ.fa'),shell=True)
     r_script = '''
     library(seqinr)
     library(BASiNET)
@@ -54,7 +59,7 @@ def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read):
     mRNA_seq <- junction_seq[number]
     name <- getName(mRNA_seq)
     write.fasta(mRNA_seq,name,file.out = '{}')
-    '''.format(coding_seq, non_coding_seq, tmp, circ, tmp, circ, tmp_file_location+'/'+raw_read+'_translated_circ.fa')
+    '''.format(coding_seq, non_coding_seq, tmp, circ, tmp, circ, tmp_file_location+raw_read+'_translated_circ.fa')
     print(r_script)
     f=open('r_script.r','w')
     f.write(r_script)
@@ -227,15 +232,16 @@ def main():
     yamlfile = args.yaml
     file = open(yamlfile)
     fileload = yaml.load(file)
+    name = fileload['genome_name']
     tmp_file_location = fileload['tmp_file_location']
     coding_seq = fileload['coding_seq']
     non_coding_seq = fileload['non_coding_seq']
     raw_read = fileload['raw_reads']
     result_file_location = fileload['result_file_location']
-    classify(coding_seq, non_coding_seq, tmp_file_location, raw_read)
+    classify(coding_seq, non_coding_seq, tmp_file_location, raw_read, name)
     
     # Translate
-    file = tmp_file_location+'/'+raw_read+'_translated_circ.fa'
+    file = tmp_file_location+raw_read[0]+'_translated_circ.fa'
     handle = Translate(file)
     handle.translate()
     
