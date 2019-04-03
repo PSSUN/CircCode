@@ -38,12 +38,14 @@ class Translate(object):
 def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read, name):
     tmp = tmp_file_location+'/'+'tmp_file'
     raw_read = raw_read[0]
-    ribo_name = raw_read.split('/')[-1].split('.')[-2]
+    print(raw_read)
+    ribo_name = raw_read.split('/')[-1].split('.')[0]
     circ = tmp_file_location+'/'+name+'.fa'
 
     #getfasta
     subprocess.call('bedtools getfasta -s -fi {} -bed {}  -split -name | fold -w 60 > {}'
     .format(tmp_file_location,tmp_file_location+ribo_name+'_junction_result',tmp_file_location+'RCRJ.fa'),shell=True)
+    
     r_script = '''
     library(seqinr)
     library(BASiNET)
@@ -59,7 +61,7 @@ def classify(coding_seq, non_coding_seq, tmp_file_location, raw_read, name):
     mRNA_seq <- junction_seq[number]
     name <- getName(mRNA_seq)
     write.fasta(mRNA_seq,name,file.out = '{}')
-    '''.format(coding_seq, non_coding_seq, tmp, circ, tmp, circ, tmp_file_location+raw_read+'_translated_circ.fa')
+    '''.format(coding_seq, non_coding_seq, tmp, circ, tmp, circ, tmp_file_location+'/'+ribo_name+'_translated_circ.fa')
     print(r_script)
     f=open('r_script.r','w')
     f.write(r_script)
