@@ -1,6 +1,6 @@
 import argparse
 import yaml
-
+import time
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -42,9 +42,14 @@ def main():
     file = open(yamlfile)
     fileload = yaml.load(file)
     tmp_file_location = fileload['tmp_file_location']
-    path1 = tmp_file_location + '/translate_1.pep.fa'
-    path2 = tmp_file_location + '/translate_2.pep.fa'
-    path3 = tmp_file_location + '/translate_3.pep.fa'
+    raw_read = fileload['raw_reads']
+    raw_read = raw_read[0].split('.')[0]
+    ribo_name = raw_read.split('/')[-1].split('.')[0]
+
+    path1 = tmp_file_location + '/RCRJ_translated_1.fa'
+    path2 = tmp_file_location + '/RCRJ_translated_2.fa'
+    path3 = tmp_file_location + '/RCRJ_translated_3.fa'
+    
     tran_1 = SeqIO.parse(path1, 'fasta')
     tran_2 = SeqIO.parse(path2, 'fasta')
     tran_3 = SeqIO.parse(path3, 'fasta')
@@ -55,8 +60,9 @@ def main():
     id_list = []
 
     len_dic = {}
+
     # Translate sequence:
-    file = tmp_file_location + '/translated_circ.fa'
+    file = tmp_file_location+'/'+ribo_name+'_translated_circ.fa'
     handle = Translate(file, tmp_file_location)
     handle.translate()
 
@@ -72,8 +78,10 @@ def main():
         id_list.append(i.id)
         tmp = {'number': 3, 'id': i.id, 'length': len(i.seq)}
         len_dic_1.append(tmp)
+    print(tran_1)
+    for i in len_dic_1:
+        print(i)
 
-    id_list = list(set(id_list))
 
     tran_1 = SeqIO.parse(path1, 'fasta')
     tran_2 = SeqIO.parse(path2, 'fasta')
@@ -139,8 +147,10 @@ def main():
     for seq in tran_3:
         if seq.id in th_id:
             longest_seq_3.append(seq)
+    print(longest_seq_1)
     longest_seq = longest_seq_1 + longest_seq_2 + longest_seq_3
     print('Finished!')
+    print(longest_seq)
     SeqIO.write(longest_seq, tmp_file_location + '/longest_pep.fa', 'fasta')
 
 
