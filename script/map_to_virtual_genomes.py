@@ -1,3 +1,5 @@
+#usr/bin/python3
+
 import time
 import subprocess
 import argparse
@@ -54,7 +56,7 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
     genome_name = str(genome).split('/')[-1].split('.')[0]
     print(get_time(), 'Start mapping...')
     print('command:')
-    print('tophat2 -p {} -I 1 -o {} {} {}'
+    print('tophat2 -p {} -I 10 -o {} {} {}'
                     .format(thread, tmp_file_location+'/'+read_name+'_tophat_result', tmp_file_location+'/'+genome_name+'.fa', cleanreads))
     subprocess.call('tophat2 -p {} -I 1 -o {} {} {}'
                     .format(thread, tmp_file_location+'/'+read_name+'_tophat_result', tmp_file_location+'/'+genome_name+'.fa', cleanreads), shell=True)
