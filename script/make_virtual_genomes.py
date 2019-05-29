@@ -1,3 +1,4 @@
+
 #/usr/bin/python3
 
 from Bio import SeqIO
@@ -74,20 +75,22 @@ class Genome(object):
                 .format(circrna.id, circrna.id, circrna.id, circrna.id))
 
             # This step aims to cut candidate sequences which are longer than 500bp
+            print(len(circrna))
+
             if len(circrna) <= 500:
                 self.genome += (circrna.seq * 2 + polyN)
-                self.increase_length += len(circrna) * 2 + 100
+                self.increase_length += len(circrna) * 2 + 50
             else:
                 self.genome += (circrna.seq[-500:] + circrna.seq[:500] + polyN)
                 self.increase_length += 1050
 
             if n == 1:
                 start_position = 1
-                end_position = self.increase_length - 100
+                end_position = self.increase_length - 50
                 next_start = self.increase_length + 1
             else:
                 start_position = next_start
-                end_position = self.increase_length - 100
+                end_position = self.increase_length - 50
                 next_start = self.increase_length + 1
             n += 1
 
@@ -155,14 +158,17 @@ def main():
     tmp_file_location = fileload['tmp_file_location']
     circ_rnas_file = fileload['circrnas']
     name = fileload['genome_name']
-
-    subprocess.call('mkdir {}'.format(tmp_file_location), shell=True)
+    try:
+        subprocess.call('mkdir -p {}'.format(tmp_file_location), shell=True)
+    except:
+        pass
     circ_rnas = SeqIO.parse(circ_rnas_file, 'fasta')
     info = Genome(circ_rnas, tmp_file_location)
     info.make_genome()
     info.make_gff_file()
     info.to_gff('{}/{}.gff'.format(tmp_file_location, name))
     info.to_fasta('{}/{}.fa'.format(tmp_file_location, name))
+    print('finished!')
 
 
 if __name__ == '__main__':
