@@ -181,7 +181,7 @@ def find_longest(tmp_file_location, raw_read, result_file_location, number):
             #print('pep:', peptide_position)
             tmp_2 = []
 
-        #print('step2:', n)
+        print('step2:', n)
         n += 1
     final_dic = {}
     #print(peptide_position)
@@ -203,7 +203,9 @@ def find_longest(tmp_file_location, raw_read, result_file_location, number):
     #print(final_dic)
 
     for seq in seqs:
-        #print(seq.id)
+        print(seq.id)
+        print(len(final_dic[seq.id]))
+     
         if len(final_dic[seq.id]) == 0:
             seq_list.append(SeqRecord(Seq(str(seq.seq)),
                                       id=str(seq.id),
@@ -254,7 +256,7 @@ def main():
     non_coding_seq = fileload['non_coding_seq']
     raw_read = fileload['raw_reads']
     result_file_location = fileload['result_file_location']
-#    classify(coding_seq, non_coding_seq, tmp_file_location, raw_read, name)
+    classify(coding_seq, non_coding_seq, tmp_file_location, raw_read, name)
     
     # Translate
     raw_read = raw_read[0]
