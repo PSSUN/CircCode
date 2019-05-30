@@ -1,4 +1,3 @@
-
 #/usr/bin/python3
 
 from Bio import SeqIO
@@ -10,6 +9,7 @@ import pickle
 import argparse
 import yaml
 
+import time
 
 class Genome(object):
 
@@ -76,7 +76,7 @@ class Genome(object):
 
             # This step aims to cut candidate sequences which are longer than 500bp
             print(len(circrna))
-
+            #time.sleep(2)
             if len(circrna) <= 500:
                 self.genome += (circrna.seq * 2 + polyN)
                 self.increase_length += len(circrna) * 2 + 50
@@ -99,8 +99,8 @@ class Genome(object):
                 self.junction.append(start_position + len(circrna))
                 self.junction_name_dic[jun] = str(circrna.id)
             else:
-                jun = int(start_position + 1000)
-                self.junction.append(start_position + 1000)
+                jun = int(start_position + 500)
+                self.junction.append(start_position + 500)
                 self.junction_name_dic[jun] = str(circrna.id)
 
             self.start.append(start_position)
