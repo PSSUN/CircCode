@@ -1,3 +1,5 @@
+#/usr/bin/python3
+
 import argparse
 import yaml
 import time
@@ -5,32 +7,6 @@ import time
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
-
-
-class Translate(object):
-
-    def __init__(self,  file, tmp_file_location):
-        self.file = file
-        self.tmp_file_location = tmp_file_location
-
-    def translate(self):
-        seqs = SeqIO.parse(self.file, 'fasta')
-        translated_seqs_1 = []
-        translated_seqs_2 = []
-        translated_seqs_3 = []
-        for seq in seqs:
-
-            seq_record_1 = SeqRecord(Seq(str(seq.translate().seq)), id=seq.id,description=seq.description)
-            seq_record_2 = SeqRecord(Seq(str(seq[1:].translate().seq)), id=seq.id, description=seq.description)
-            seq_record_3 = SeqRecord(Seq(str(seq[2:].translate().seq)), id=seq.id, description=seq.description)
-
-            translated_seqs_1.append(seq_record_1)
-            translated_seqs_2.append(seq_record_2)
-            translated_seqs_3.append(seq_record_3)
-
-        SeqIO.write(translated_seqs_1, self.tmp_file_location+'/RCRJ_translated_1.fa', 'fasta')
-        SeqIO.write(translated_seqs_2, self.tmp_file_location+'/RCRJ_translated_2.fa', 'fasta')
-        SeqIO.write(translated_seqs_3, self.tmp_file_location+'/RCRJ_translated_3.fa', 'fasta')
 
 
 def main():
@@ -46,9 +22,9 @@ def main():
     raw_read = raw_read[0].split('.')[0]
     ribo_name = raw_read.split('/')[-1].split('.')[0]
 
-    path1 = tmp_file_location + '/RCRJ_translated_1.fa'
-    path2 = tmp_file_location + '/RCRJ_translated_2.fa'
-    path3 = tmp_file_location + '/RCRJ_translated_3.fa'
+    path1 = tmp_file_location + '/result_pep_1.fa'
+    path2 = tmp_file_location + '/result_pep_2.fa'
+    path3 = tmp_file_location + '/result_pep_3.fa'
     
     tran_1 = SeqIO.parse(path1, 'fasta')
     tran_2 = SeqIO.parse(path2, 'fasta')
@@ -60,11 +36,6 @@ def main():
     id_list = []
 
     len_dic = {}
-
-    # Translate sequence:
-    file = tmp_file_location+'/'+ribo_name+'_translated_circ.fa'
-    handle = Translate(file, tmp_file_location)
-    handle.translate()
 
     for i in tran_1:
         tmp = {'number': 1, 'id': i.id, 'length': len(i.seq)}
@@ -78,9 +49,9 @@ def main():
         id_list.append(i.id)
         tmp = {'number': 3, 'id': i.id, 'length': len(i.seq)}
         len_dic_1.append(tmp)
-    print(tran_1)
-    for i in len_dic_1:
-        print(i)
+#    print(tran_1)
+#    for i in len_dic_1:
+#        print(i)
 
 
     tran_1 = SeqIO.parse(path1, 'fasta')
@@ -125,7 +96,7 @@ def main():
             se_list.append(i)
         else:
             th_list.append(i)
-    print(len(fi_list), len(se_list), len(th_list))
+#    print(len(fi_list), len(se_list), len(th_list))
 
     fi_id = [x['id'] for x in fi_list]
     se_id = [x['id'] for x in se_list]
@@ -147,10 +118,10 @@ def main():
     for seq in tran_3:
         if seq.id in th_id:
             longest_seq_3.append(seq)
-    print(longest_seq_1)
+#    print(longest_seq_1)
     longest_seq = longest_seq_1 + longest_seq_2 + longest_seq_3
     print('Finished!')
-    print(longest_seq)
+#    print(longest_seq)
     SeqIO.write(longest_seq, tmp_file_location + '/longest_pep.fa', 'fasta')
 
 
