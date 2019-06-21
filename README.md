@@ -19,7 +19,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 
 - bedtools (v.2.26.0+): (https://bedtools.readthedocs.io/en/latest/)
 - bowtie (v.1.2.2+): (http://bowtie-bio.sourceforge.net/index.shtml)
-- TopHat2 (v.2.1.1+): (http://ccb.jhu.edu/software/tophat/index.shtml)
+- STAR (v.2.7.1+): (https://github.com/alexdobin/STAR)
 - Python3 (v.3.6.5+): (https://www.python.org/)
 - R language (v.3.4.4+): (https://www.r-project.org/)
 
