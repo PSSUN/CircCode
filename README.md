@@ -131,7 +131,7 @@ When opening the config file in text format, there are some lines that need to b
   
   - thread:
   
-     The number of threads running, only the number in the input int format is supported here, for example: 1 or 2 or 3 or 4...
+     The number of threads running, only the number in the input int format is supported here, for example: **1** or **2** or **3** or **4** or **5**...
 
 **NOTE**：The test file is only used to test whether the software can run smoothly and does not represent the actual research results.
 
