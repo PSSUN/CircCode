@@ -30,7 +30,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 #### R package:
 
 - BASiNET: (https://github.com/cran/BASiNET)
-- Seqinr: (https://cran.r-project.org/web/packages/seqinr/index.html)
+- Biostrings: (http://www.bioconductor.org/packages/release/bioc/html/Biostrings.html)
 
 ### Usage
 
