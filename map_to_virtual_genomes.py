@@ -20,15 +20,15 @@ def make_index(thread, genome, ribosome, tmp_file_location, genome_fasta, name):
 
     subprocess.call('STAR --runThreadN {} --runMode genomeGenerate --genomeDir {} --genomeFastaFiles {}'.format(thread,tmp_file_location+'/',genome),shell=True)
 
-    subprocess.call('bowtie2-build --threads {} {} {}/{}'
+    subprocess.call('bowtie-build --threads {} {} {}/{}'
                     .format(thread, ribosome, tmp_file_location, ribo_name),
                     shell=True, stdout=False)
 
-#    subprocess.call('bowtie2-build --threads {} {} {}/{}'
+#    subprocess.call('bowtie-build --threads {} {} {}/{}'
 #                    .format(thread, genome, tmp_file_location, name+'.fa'),
 #                    shell=True, stdout=False)
 
-    subprocess.call('bowtie2-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_file_location,genome_fasta.split('/')[-1]),shell=True)
+    subprocess.call('bowtie-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_file_location,genome_fasta.split('/')[-1]),shell=True)
 
     print('bowtie-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_file_location, genome_fasta.split('/')[-1]))
     print('-' * 100)
