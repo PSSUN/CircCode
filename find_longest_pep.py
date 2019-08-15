@@ -1,12 +1,10 @@
-#/usr/bin/python3
+# /usr/bin/python3
 
 import argparse
 import yaml
-import time
+import subprocess
 import pickle
 
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
 
 
@@ -21,13 +19,13 @@ def main():
     tmp_file_location = fileload['tmp_file_location']
     raw_read = fileload['raw_reads']
     circrna = fileload['circrnas']
+    result_file_location = fileload['result_file_location']
     raw_read = raw_read[0].split('.')[0]
-    ribo_name = raw_read.split('/')[-1].split('.')[0]
 
     path1 = tmp_file_location + '/result_pep_1.fa'
     path2 = tmp_file_location + '/result_pep_2.fa'
     path3 = tmp_file_location + '/result_pep_3.fa'
-    
+
     tran_1 = SeqIO.parse(path1, 'fasta')
     tran_2 = SeqIO.parse(path2, 'fasta')
     tran_3 = SeqIO.parse(path3, 'fasta')
@@ -51,10 +49,9 @@ def main():
         id_list.append(i.id)
         tmp = {'number': 3, 'id': i.id, 'length': len(i.seq)}
         len_dic_1.append(tmp)
-#    print(tran_1)
-#    for i in len_dic_1:
-#        print(i)
-
+    #    print(tran_1)
+    #    for i in len_dic_1:
+    #        print(i)
 
     tran_1 = SeqIO.parse(path1, 'fasta')
     tran_2 = SeqIO.parse(path2, 'fasta')
@@ -98,7 +95,7 @@ def main():
             se_list.append(i)
         else:
             th_list.append(i)
-#    print(len(fi_list), len(se_list), len(th_list))
+    #    print(len(fi_list), len(se_list), len(th_list))
 
     fi_id = [x['id'] for x in fi_list]
     se_id = [x['id'] for x in se_list]
@@ -120,20 +117,20 @@ def main():
     for seq in tran_3:
         if seq.id in th_id:
             longest_seq_3.append(seq)
-#    print(longest_seq_1)
+    #    print(longest_seq_1)
     longest_seq = longest_seq_1 + longest_seq_2 + longest_seq_3
     print('Finished!')
     print(longest_seq)
     SeqIO.write(longest_seq, tmp_file_location + '/longest_pep.fa', 'fasta')
-    
-    read_jun = pickle.load(open(tmp_file_location +'/reads_jun','rb'))
-    dic_jun = pickle.load(open(tmp_file_location +'/junction_name_dic', 'rb'))
+
+    read_jun = pickle.load(open(tmp_file_location + '/reads_jun', 'rb'))
+    dic_jun = pickle.load(open(tmp_file_location + '/junction_name_dic', 'rb'))
 
     name_list = []
     for i in read_jun:
         name_list.append(dic_jun[i])
 
-    all_seq = SeqIO.parse(circrna,'fasta')
+    all_seq = SeqIO.parse(circrna, 'fasta')
 
     trans_circ = []
 
@@ -141,7 +138,15 @@ def main():
         if seq.name in name_list:
             trans_circ.append(seq)
 
-    SeqIO.write(trans_circ,tmp_file_location + '/translated_circRNA.fa','fasta')
+    SeqIO.write(trans_circ, tmp_file_location + '/translated_circRNA.fa', 'fasta')
+    subprocess.call('./requiredSoft/FragGeneScan -s {} -o {} -w 0 -t ./requiredSoft/train'
+                    .format(tmp_file_location + '/translated_circRNA.fa',
+                            result_file_location + '/translated_peptides.fa'),
+                    shell=True)
+    subprocess.call('mv {} {}'.format(tmp_file_location + '/translated_circRNA.fa',
+                                      result_file_location + '/translated_circRNA.fa'),
+                    shell=True)
+
 
 if __name__ == '__main__':
     main()
