@@ -18,7 +18,7 @@ def make_index(thread, genome, ribosome, tmp_file_location, genome_fasta, name):
 
     print('STAR --runThreadN {} --runMode genomeGenerate --genomeDir {} --genomeFastaFiles {}'.format(thread,tmp_file_location+'/',genome))
 
-    subprocess.call('STAR --runThreadN {} --runMode genomeGenerate --genomeDir {} --genomeFastaFiles {}'.format(thread,tmp_file_location+'/',genome),shell=True)
+    subprocess.call('./requiredSoft/STAR --runThreadN {} --runMode genomeGenerate --genomeDir {} --genomeFastaFiles {}'.format(thread,tmp_file_location+'/',genome),shell=True)
 
     subprocess.call('bowtie-build --threads {} {} {}/{}'
                     .format(thread, ribosome, tmp_file_location, ribo_name),
@@ -82,7 +82,7 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
 
     
 
-    subprocess.call('STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'.format(thread,tmp_file_location+'/',tmp_file_location+'/'+unmaped_reads,tmp_file_location+'/all_bam/'+read_name),shell=True)
+    subprocess.call('./requiredSoft/STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'.format(thread,tmp_file_location+'/',tmp_file_location+'/'+unmaped_reads,tmp_file_location+'/all_bam/'+read_name),shell=True)
 
 #    print('bowtie -p {} -norc {} {} > {}'
 #                    .format(thread, tmp_file_location+'/'+genome_name+'.fa', cleanreads, tmp_file_location+'/all_bam/'+read_name+'.sam'))
