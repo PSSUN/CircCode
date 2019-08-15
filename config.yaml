@@ -29,7 +29,7 @@ raw_reads:
 ribosome_fasta: /full/path/to/rRNA/file.fa
 
 # The path of trimmomatic.jar
-trimmomatic_jar: /full/path/to/Trimmomatic-0.38/trimmomatic-0.38.jar
+trimmomatic_jar: ./requiredSoft/trimmomatic-0.38.jar
 
 # The path of Candidate circRNA
 circrnas: /full/path/to/Candidate/circRNA.fa
