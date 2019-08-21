@@ -139,7 +139,7 @@ def main():
             trans_circ.append(seq)
 
     SeqIO.write(trans_circ, tmp_file_location + '/translated_circRNA.fa', 'fasta')
-    subprocess.call('./requiredSoft/FragGeneScan -s {} -o {} -w 0 -t ./requiredSoft/train'
+    subprocess.call('./requiredSoft/FragGeneScan -s {} -o {} -w 0 -t complete'
                     .format(tmp_file_location + '/translated_circRNA.fa',
                             result_file_location + '/translated_peptides.fa'),
                     shell=True)
