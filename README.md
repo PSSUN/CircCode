@@ -161,3 +161,5 @@ When opening the config file in text format, there are some lines that need to b
 ### Contact us
 
 If you encounter any problems while using CircCode, please send an email (sps@snnu.edu.cn / glli@snnu.edu.cn) or submit the issues on GitHub (https://github.com/Sunpeisen/circCode/issues) and we will resolve it as soon as possible.
+
+![mX0sDf.png](https://s2.ax1x.com/2019/08/30/mX0sDf.png)
