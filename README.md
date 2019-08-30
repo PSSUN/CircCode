@@ -32,6 +32,10 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 - BASiNET: (https://github.com/cran/BASiNET)
 - Biostrings: (http://www.bioconductor.org/packages/release/bioc/html/Biostrings.html)
 
+### Download
+  Open the terminal and input:
+  git clone https://github.com/PSSUN/CircCode.git
+  
 ### Usage
 
 ##### - You can run all CircCode pipeline by one script
