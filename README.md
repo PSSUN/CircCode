@@ -45,6 +45,13 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
   git clone https://github.com/PSSUN/CircCode.git
   ```
 ---
+## Install required packages
+  ```bash
+  cd CircCode
+  ./ Install.sh
+  ```
+  NOTE: This step is optional, If you have already met all the required packages in your environment, you don't need to do this step, you can run the python script directly.At the same time, you can also install the required installation packages to meet the software requirements.
+---
 ### Usage
 
 ##### - You can run all CircCode pipeline by one script
