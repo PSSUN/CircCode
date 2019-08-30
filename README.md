@@ -9,7 +9,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 ---
 
 ## Requirement
-#### Data:
+### Data:
 
 - Genome sequence (fasta format)
 - Candidate circRNA sequence (fasta/bed format)
@@ -17,7 +17,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 - Adapter sequence (fasta format)
 - Ribosome profiling data (sra format)
 - Coding and non-coding sequence (fasta format)
-#### Software:
+### Software:
 
 - bedtools (v.2.26.0+): (https://bedtools.readthedocs.io/en/latest/)
 - bowtie (v.1.2.2+): (http://bowtie-bio.sourceforge.net/index.shtml)
@@ -25,17 +25,17 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 - Python3 (v.3.6.5+): (https://www.python.org/)
 - R language (v.3.4.4+): (https://www.r-project.org/)
 
-#### python3 package:
+### python3 package:
 
 - Biopython (v.1.72+): (https://pypi.org/project/biopython/)
 - Pandas (v.0.23.3+): (https://pypi.org/project/pandas/)
 
-#### R package:
+### R package:
 
 - BASiNET: (https://github.com/cran/BASiNET)
 - Biostrings: (http://www.bioconductor.org/packages/release/bioc/html/Biostrings.html)
 
-#### Supported operating systems：
+### Supported operating systems：
 ![](https://s2.ax1x.com/2019/08/30/mX31PK.th.jpg)
 
 ---
@@ -55,7 +55,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 ---
 ## Usage
 
-##### - You can run all CircCode pipeline by one script
+### - You can run all CircCode pipeline by one script
 
 1. Fill the config file (https://github.com/Sunpeisen/CircCode/blob/master/config.yaml), input full path of each required file.
 
@@ -65,7 +65,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
    sh one_step_script.sh config.yaml
  ```
 
-##### - Or you can run CircCode step by step
+### - Or you can run CircCode step by step
 
   1. Fill the config file (https://github.com/Sunpeisen/CircCode/blob/master/config.yaml), input full path of each required file.
 
@@ -94,7 +94,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 
 You can downlad the required sra file from [NCBI-SRA](https://www.ncbi.nlm.nih.gov/sra/SRR3495992), we also provide the other required files (includes genome.fa, genome.gtf etc.) in [example.tar.xz](https://github.com/PSSUN/CircCode/blob/master/example.tar.xz). Fill in the path of the corresponding file into the project corresponding to config.yaml. Then follow the steps mentioned above to run each script.
 
-#### How to fill in the config.yaml file?
+### How to fill in the config.yaml file?
 
 When opening the config file in text format, there are some lines that need to be filled in, they are:
 
