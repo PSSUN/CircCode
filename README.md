@@ -6,6 +6,8 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 
 ![workflow](https://i.loli.net/2019/08/30/s2O7TcUiKSZYLMj.png)
 
+---
+
 ### Requirement
 #### Data:
 
@@ -36,11 +38,13 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 #### Supported operating systems：
 ![](https://s2.ax1x.com/2019/08/30/mX31PK.th.jpg)
 
+---
 ### Download
   Open the terminal and input:
   ```bash
   git clone https://github.com/PSSUN/CircCode.git
   ```
+---
 ### Usage
 
 ##### - You can run all CircCode pipeline by one script
@@ -77,7 +81,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
  ```python
   python3 find_longest_pep.py -y config.yaml
  ```
-
+---
 ### Run example
 
 You can downlad the required sra file from [NCBI-SRA](https://www.ncbi.nlm.nih.gov/sra/SRR3495992), we also provide the other required files (includes genome.fa, genome.gtf etc.) in [example.tar.xz](https://github.com/PSSUN/CircCode/blob/master/example.tar.xz). Fill in the path of the corresponding file into the project corresponding to config.yaml. Then follow the steps mentioned above to run each script.
@@ -145,7 +149,7 @@ When opening the config file in text format, there are some lines that need to b
 **NOTE**：The test file is only used to test whether the software can run smoothly and does not represent the actual research results.
 
 
-
+---
 ### Contact us
 
 If you encounter any problems while using CircCode, please send an email (sps@snnu.edu.cn / glli@snnu.edu.cn) or submit the issues on GitHub (https://github.com/Sunpeisen/circCode/issues) and we will resolve it as soon as possible.
