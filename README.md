@@ -164,7 +164,7 @@ When opening the config file in text format, there are some lines that need to b
 
    2. **Q: Do I need to fill out all the items in the yaml configuration file?**
 
-      **A:** Yes, all projects need to be filled out by themselves. How to fill in the configuration file is explained in the previous section.
+      **A:** Yes, all projects need to be filled out. How to fill in the configuration file is explained in the previous section.
 
 ---
 ## Contact us
