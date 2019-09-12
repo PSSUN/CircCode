@@ -157,6 +157,15 @@ When opening the config file in text format, there are some lines that need to b
 **NOTE**：The test file is only used to test whether the software can run smoothly and does not represent the actual research results.
 
 
+## FAQ
+   1. **Q: In the prediction step, why does BASiNET not seem to have the expected results?**
+    
+   **A:** Make sure that the BASiNET package is properly installed on your computer. It is worth noting that BASiNET's dependency package rJava tends to have installation errors, ensuring that the dependencies are working fine.
+
+   2. **Q: Do I need to fill out all the items in the yaml configuration file?**
+
+   **A:** Yes, all projects need to be filled out by themselves. How to fill in the configuration file is explained in the previous section.
+
 ---
 ## Contact us
 
