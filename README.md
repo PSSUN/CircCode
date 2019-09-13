@@ -167,6 +167,10 @@ When opening the config file in text format, there are some lines that need to b
       **A:** Yes, all projects need to be filled out. How to fill in the configuration file is explained in the previous section.
 
 ---
+## Cite
+
+   CircCode: a powerful tool for identifying circRNA coding ability 
+
 ## Contact us
 
 If you encounter any problems while using CircCode, please send an email (sps@snnu.edu.cn / glli@snnu.edu.cn) or submit the issues on GitHub (https://github.com/Sunpeisen/circCode/issues) and we will resolve it as soon as possible.
