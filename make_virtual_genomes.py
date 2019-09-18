@@ -170,6 +170,12 @@ class Genome(object):
         SeqIO.write(self.newGenome, name, 'fasta')
 
     def to_gff(self, name):
+        newlist = []
+        for i in self.junction:
+            newlist.append(i)
+            newlist.append(i)
+            newlist.append(i)
+        self.gff['junction'] = newlist
         self.gff.to_csv(name, sep='\t', header=False, index=False, escapechar='"', doublequote=0)
         subprocess.call('sed -i \'s/""/"/g\' {}'.format(name), shell=True)
 
