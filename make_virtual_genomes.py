@@ -189,7 +189,7 @@ def main():
     try:
         subprocess.call('mkdir -p {}'.format(tmp_file_location), shell=True)
     except:
-        pass
+        print('Error during make new dir.')
     circ_rnas = SeqIO.parse(circ_rnas_file, 'fasta')
     info = Genome(circ_rnas, tmp_file_location)
     info.make_genome()
