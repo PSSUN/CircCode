@@ -1,3 +1,5 @@
+#!usr/bin/python3
+
 import yaml
 import pickle
 import re
@@ -35,7 +37,10 @@ class Translate(object):
         SeqIO.write(translated_seqs_2, '{}/RCRJ_translated_2.fa'.format(self.tmp_file_location), 'fasta')
         SeqIO.write(translated_seqs_3, '{}/RCRJ_translated_3.fa'.format(self.tmp_file_location), 'fasta')
 
-#Use R language to call BASiNET to classify sequences.
+# Use R language to call BASiNET to classify sequences.
+# MODEL = RF
+# CALL = R LANGUAGE
+
 def classify(coding_seq, non_coding_seq, tmp_file_location,name):
     tmp = tmp_file_location+'/'+'tmp_file'
     circ = tmp_file_location+'/'+name+'.fa'
@@ -79,7 +84,8 @@ def find_longest(tmp_file_location, raw_read, result_file_location, number):
     trans_seq = tmp_file_location+'/'+'RCRJ_translated_{}.fa'.format(number)
     junction = pickle.load(open('{}'.format(tmp_file_location+'/'+'junction'), 'rb'))
     seqs = SeqIO.parse('{}'.format(trans_seq), 'fasta')
-
+    
+    # The format are showed follow:
     # position:
     position = []
 
@@ -91,9 +97,13 @@ def find_longest(tmp_file_location, raw_read, result_file_location, number):
 
     # id_dic: {junction_1:[seq.id]...}
     id_dic = {}
-
+    
+    #length_dic is a dic to storage the length of each circRNA.
     length_dic = {}
+    
+    # tmp is a list to storage the position.
     tmp = []
+    # n is the counter of this step.
     n = 1
     for seq in seqs:
         for i in re.finditer('\*', str(seq.seq)):
@@ -118,6 +128,7 @@ def find_longest(tmp_file_location, raw_read, result_file_location, number):
     print('-' * 100)
     # peptide_position:{junction_1:[peptide_start_position,peptide_end_position]...}
     peptide_position = {}
+    # same as list tmp
     tmp_2 = []
     
     #print(junction_dic)
