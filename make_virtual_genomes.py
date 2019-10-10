@@ -38,7 +38,7 @@ class Genome(object):
             # correspond to genes, transcripts, and exons, respectively.
             # Writing in this way can look more clear, as well as the following.
 
-            # gene
+            # -----gene-----
             self.circ_name.append(
                 'gene_id "{}";'
                 ' transcript_id "{}";'
@@ -51,7 +51,7 @@ class Genome(object):
                 ' protein_version "1";'
                 .format(circrna.id, circrna.id, circrna.id, circrna.id))
 
-            # transcript
+            # -----transcript-----
             self.circ_name.append(
                 'gene_id "{}";'
                 ' transcript_id "{}";'
@@ -64,7 +64,7 @@ class Genome(object):
                 ' protein_version "1";'
                 .format(circrna.id, circrna.id, circrna.id, circrna.id))
 
-            #exon
+            # -----exon-----
             self.circ_name.append(
                 'gene_id "{}";'
                 ' transcript_id "{}";'
@@ -79,8 +79,16 @@ class Genome(object):
 
             # This step aims to cut candidate sequences which are longer than 500bp
             print('No.',n,'length:',len(circrna))
-            #time.sleep(2)
-
+            
+            # time.sleep(2)
+            # time was used to debug here for developer.
+            
+            # The length of each list is set the limitation of 30000
+            # If list is too large, it will cost much time to append() sequence.
+            
+            # The length of each circRNA was no more than 500bp
+            # Because we only focus on the junction site of each circRNA
+            # If the length is longer than 500bp, the longer part of circRNA will be cut off.
             if n <= 30000:
                 if len(circrna) <= 500:
                     self.genome += (circrna.seq * 2 + polyN)
