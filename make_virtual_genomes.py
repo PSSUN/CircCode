@@ -37,7 +37,8 @@ class Genome(object):
             # The same behavior was repeated three times because they
             # correspond to genes, transcripts, and exons, respectively.
             # Writing in this way can look more clear, as well as the following.
-
+            # So you can easily change the value of each line in gff file under your situation.
+            
             # -----gene-----
             self.circ_name.append(
                 'gene_id "{}";'
