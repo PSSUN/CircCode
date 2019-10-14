@@ -156,6 +156,9 @@ When opening the config file in text format, there are some lines that need to b
 
 **NOTE**：The test file is only used to test whether the software can run smoothly and does not represent the actual research results.
 
+## Update
+
+ - 2019-10-14: Fixed a bug where the executable didn't run permission and caused an error.
 
 ## FAQ
    1. **Q: In the prediction step, why does BASiNET not seem to have the expected results?**
