@@ -8,3 +8,7 @@ cd bedtools-2.26.0
 make
 cd bin/
 export PATH=$PWD:$PATH
+
+# Give the Permission
+chmod a+x ./requiredSoft/STAR
+chmod a+x ./requiredSoft/FragGeneScan
