@@ -172,7 +172,7 @@ When opening the config file in text format, there are some lines that need to b
 ---
 ## Citation
 
-   [Sun P and Li G (2019) CircCode: A Powerful Tool for Identifying circRNA Coding Ability. Front. Genet. 10:981. doi: 10.3389/fgene.2019.00981](/articles/10.3389/fgene.2019.00981/full?&utm_source=Email_to_authors_&utm_medium=Email&utm_content=T1_11.5e1_author&utm_campaign=Email_publication&field=&journalName=Frontiers_in_Genetics&id=480100#h9)
+   [Sun P and Li G (2019) CircCode: A Powerful Tool for Identifying circRNA Coding Ability. Front. Genet. 10:981. doi: 10.3389/fgene.2019.00981](https://www.frontiersin.org/articles/10.3389/fgene.2019.00981/full)
 
 ## Contact us
 
