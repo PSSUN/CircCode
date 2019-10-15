@@ -8,9 +8,11 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 
 ---
 
-[Requirement](https://github.com/PSSUN/CircCode#Requirement)
-[Usage](https://github.com/PSSUN/CircCode#Usage)
-[Update](https://github.com/PSSUN/CircCode#Update)
+## Overview
+- [Requirement](https://github.com/PSSUN/CircCode#Requirement)
+- [Usage](https://github.com/PSSUN/CircCode#Usage)
+- [Update](https://github.com/PSSUN/CircCode#Update)
+- [Run example](https://github.com/PSSUN/CircCode#Run_example)
 
 ## Requirement
 ### Data:
@@ -163,6 +165,7 @@ When opening the config file in text format, there are some lines that need to b
 ## Update
 
  - 2019-10-14: Fixed a bug where the executable didn't run permission and caused an error.
+ - 2019-10-15: Update the Read.md
 
 ## FAQ
    1. **Q: In the prediction step, why does BASiNET not seem to have the expected results?**
