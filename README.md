@@ -8,6 +8,10 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 
 ---
 
+[Requirement](https://github.com/PSSUN/CircCode#Requirement)
+[Usage](https://github.com/PSSUN/CircCode#Usage)
+[Update](https://github.com/PSSUN/CircCode#Update)
+
 ## Requirement
 ### Data:
 
