@@ -175,7 +175,12 @@ When opening the config file in text format, there are some lines that need to b
    2. **Q: Do I need to fill out all the items in the yaml configuration file?**
 
       **A:** Yes, all projects need to be filled out. How to fill in the configuration file is explained in the previous section.
-
+      
+   3. **Q: I can't install R packages named 'rJava'.**
+   
+      **A:** Try *apt-get install r-cran-rjava* in ternimal.  
+      
+   
 ---
 ## Citation
 
