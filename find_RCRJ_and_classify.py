@@ -41,13 +41,13 @@ class Translate(object):
 # MODEL = RF
 # CALL = R LANGUAGE
 
-def classify(coding_seq, non_coding_seq, tmp_file_location,name):
+def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts):
     tmp = tmp_file_location+'/'+'tmp_file'
     circ = tmp_file_location+'/'+name+'.fa'
     print(circ)
     RCRJ = tmp_file_location+'/'+'RCRJ.fa'
     
-    subprocess.call('''awk '$4>3 {}' {} > {}'''.format('{print $0}',tmp_file_location+'/'+'junction_result',tmp_file_location+'/'+'junction_filter_result'), shell=True)
+    subprocess.call('''awk '$4>{} {}' {} > {}'''.format(coverage_counts,'{print $0}',tmp_file_location+'/'+'junction_result',tmp_file_location+'/'+'junction_filter_result'), shell=True)
     #getfasta
     subprocess.call('bedtools getfasta -s -fi {} -bed {}  -split -name | fold -w 60 > {}'
     .format(circ,tmp_file_location+'/'+'junction_filter_result',RCRJ),shell=True)
@@ -271,7 +271,8 @@ def main():
     non_coding_seq = fileload['non_coding_seq']
     raw_read = fileload['raw_reads']
     result_file_location = fileload['result_file_location']
-    classify(coding_seq, non_coding_seq, tmp_file_location,name)
+    coverage_counts = fileload['coverage_counts']
+    classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts)
 #    subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+'translated_circ.fa'),shell=True)
     # Translate
     raw_read = raw_read[0]
