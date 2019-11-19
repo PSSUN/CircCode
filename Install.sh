@@ -1,5 +1,5 @@
 # install python package
-pip3 install -r requirements.txt
+sudo pip3 install -r requirements.txt
 
 # install bedtools
 tar -zxvf bedtools-2.26.0.tar.gz
