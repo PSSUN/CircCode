@@ -5,7 +5,7 @@
 # find_longest_pep.py: 4
 # make_virtual_genomes.py: 10
 # map_to_virtual_genomes.py: 6
-PyYAML == 3.13
+PyYAML == 5.1
 
 # find_RCRJ_and_classify.py: 10,11,12
 # find_longest_pep.py: 8
