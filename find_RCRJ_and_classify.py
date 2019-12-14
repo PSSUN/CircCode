@@ -273,7 +273,7 @@ def main():
     result_file_location = fileload['result_file_location']
     coverage_counts = fileload['coverage_counts']
     classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts)
-#    subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+'translated_circ.fa'),shell=True)
+    # subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+'translated_circ.fa'),shell=True)
     # Translate
     raw_read = raw_read[0]
     ribo_name = raw_read.split('/')[-1].split('.')[0]
@@ -284,8 +284,8 @@ def main():
     
     # Find longest peptide
 
-    for number in range(1,4):
-        find_longest(tmp_file_location, ribo_name, result_file_location, number)
+    # for number in range(1,4):
+    #    find_longest(tmp_file_location, ribo_name, result_file_location, number)
     
 
 if __name__ == '__main__':
