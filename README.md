@@ -101,7 +101,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
 ---
 ## Run example
 
-You can download the required sra file from [NCBI-SRA](https://www.ncbi.nlm.nih.gov/sra/SRR3495992), we also provide the other required files (includes genome.fa, genome.gtf etc.) in [example.tar.xz](https://github.com/PSSUN/CircCode/blob/master/example.tar.xz). Fill in the path of the corresponding file into the project corresponding to config.yaml. Then follow the steps mentioned above to run each script.
+You can download the required sra file from [NCBI-SRA](https://www.ncbi.nlm.nih.gov/sra/SRR3495992), we also provide the other required files (includes genome.fa, genome.gtf etc.) in [example.tar.xz](https://github.com/PSSUN/CircCode/blob/master/example.tar). Fill in the path of the corresponding file into the project corresponding to config.yaml. Then follow the steps mentioned above to run each script.
 
 ### How to fill in the config.yaml file?
 
