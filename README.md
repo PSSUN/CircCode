@@ -170,6 +170,8 @@ When opening the config file in text format, there are some lines that need to b
  - 2019-10-14: Fixed a bug where the executable didn't run permission and caused an error.
  - 2019-10-15: Update the Read.md
  - 2019-12-16: Update the Read.md
+ - 2020-01-30: Remove the useless code of second script.
+
 
 ## FAQ
    1. **Q: In the prediction step, why does BASiNET not seem to have the expected results?**
