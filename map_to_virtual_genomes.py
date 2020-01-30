@@ -24,10 +24,6 @@ def make_index(thread, genome, ribosome, tmp_file_location, genome_fasta, name):
                     .format(thread, ribosome, tmp_file_location, ribo_name),
                     shell=True, stdout=False)
 
-#    subprocess.call('bowtie-build --threads {} {} {}/{}'
-#                    .format(thread, genome, tmp_file_location, name+'.fa'),
-#                    shell=True, stdout=False)
-
     subprocess.call('bowtie-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_file_location,genome_fasta.split('/')[-1]),shell=True)
 
     print('bowtie-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_file_location, genome_fasta.split('/')[-1]))
@@ -63,10 +59,7 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
     print('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread, tmp_file_location+'/'+unmaped_reads, tmp_file_location+'/'+genome_fasta.split('/')[-1], tmp_file_location+'/'+without_rrna_reads, ribo_name))
 
     subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread, tmp_file_location+'/'+unmaped_reads, tmp_file_location+'/'+genome_fasta.split('/')[-1], tmp_file_location+'/'+without_rrna_reads, ribo_name),shell=True)
-    
 
-    
-      
     print('-' * 100)
     print(get_time(), 'Finished clean process.')
     print('-' * 100)
@@ -78,19 +71,8 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
     print('command:')
     # Path to tophat2 result:
     tophat_result = tmp_file_location+'/'+read_name+'_tophat_result'
-    
-
-    
 
     subprocess.call('./requiredSoft/STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'.format(thread,tmp_file_location+'/',tmp_file_location+'/'+unmaped_reads,tmp_file_location+'/all_bam/'+read_name),shell=True)
-
-#    print('bowtie -p {} -norc {} {} > {}'
-#                    .format(thread, tmp_file_location+'/'+genome_name+'.fa', cleanreads, tmp_file_location+'/all_bam/'+read_name+'.sam'))
-    
-#    subprocess.call('bowtie -p {} -norc {} {} > {}'
-#                    .format(thread, tmp_file_location+'/'+genome_name+'.fa', cleanreads, tmp_file_location+'/all_bam/'+read_name+'.sam'), shell=True)
-
-#    subprocess.call('samtools view {} > {}'.format(tmp_file_location+'/all_bam/'+read_name+'.sam',tmp_file_location+'/all_bam/'+read_name+'_accepted_hits.bam'),shell=True)
 
     print(get_time(), 'Finished mapping')
     print(get_time(), 'Start analysing...')
@@ -98,19 +80,7 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
     a=tophat_result+'/accepted_hits.bam'
     print(a)
     
-#    subprocess.call('mv {} {}'.format(tophat_result+'/accepted_hits.bam',tophat_result+'/'+read_name+'_accepted_hits.bam'), shell=True)
-#    subprocess.call('mv {} {}'.format(tophat_result+'/'+read_name+'_accepted_hits.bam', tmp_file_location+'/all_bam'), shell=True)
     print('-'*100)    
-#    subprocess.call('samtools {} {}'.format(tmp_file_location+'/all_bam/total.bam',tmp_file_location+'/all_bam/*_accepted_hits.bam'), shell=True)
-#    subprocess.call(
-#        'bedtools bamtobed -bed12 -i {}/{}_tophat_result/accepted_hits.bam > {}/{}_tophat_result/bamtobed_result.bed'
-#            .format(tmp_file_location, read_name, tmp_file_location, read_name),
-#        shell=True)
-#    subprocess.call(
-#        'bedtools merge -i {}/{}_tophat_result/bamtobed_result.bed -c 1 -o count > {}/{}_merge_result'
-#            .format(tmp_file_location, read_name, tmp_file_location, read_name),
-#        shell=True)
-
 
 def find_reads_on_junction(tmp_file_location):
     result = pd.DataFrame(columns=['a', 'b', 'c', 'd'])
@@ -139,9 +109,9 @@ def find_reads_on_junction(tmp_file_location):
 
 def remove_tmp_file():
     subprocess.call('mkdir -p reads', shell=True)
-#    subprocess.call('mv *.clean.without.rRNA.fastq ./reads', shell=True)
+    subprocess.call('mv *.clean.without.rRNA.fastq ./reads', shell=True)
     subprocess.call('mkdir -p result', shell=True)
-#    subprocess.call('rm *.fastq', shell=True)
+    subprocess.call('rm *.fastq', shell=True)
 
 
 def get_time():
