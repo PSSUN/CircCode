@@ -171,6 +171,7 @@ When opening the config file in text format, there are some lines that need to b
  - 2019-10-15: Update the Read.md
  - 2019-12-16: Update the Read.md
  - 2020-01-30: Remove the useless code of second script.
+ - 2020-05-20: Update one_step_script.sh script
 
 
 ## FAQ
