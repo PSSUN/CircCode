@@ -66,3 +66,5 @@ coverage_counts: 10
 # The thread to run tophat2 and SEPCtr, DEFAULT = 6
 thread: 6
 
+# merge all the NGS data: T or F
+merge: T
