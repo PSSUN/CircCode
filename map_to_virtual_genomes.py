@@ -7,6 +7,7 @@ import yaml
 import pickle
 import pandas as pd
 import time
+import os
 from multiprocessing import Pool
 
 
@@ -42,23 +43,39 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
 
     # Transform sra to fastq format
     subprocess.call('fastq-dump {} -O {}'
-                    .format(raw_read, tmp_file_location),
+                    .format(raw_read,
+                            tmp_file_location),
                     shell=True)
     
     # Filter out low quality reads by Trimmomatic
     subprocess.call('java -jar {} SE -phred33 '
                     '{} {} ILLUMINACLIP:{}:2:30:10 '
                     'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
-                    .format(trimmomatic, tmp_file_location+'/'+read_name+'.fastq', read_name+'.clean.fastq', riboseq_adapters), shell=True)
+                    .format(trimmomatic,
+                            tmp_file_location+'/'+read_name+'.fastq',
+                            read_name+'.clean.fastq',
+                            riboseq_adapters),
+                    shell=True)
     
     # Map clean reads to ribosome sequence by bowtie
     subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_rRNA.sam'
-                    .format(thread, tmp_file_location+'/'+without_rrna_reads, tmp_file_location+'/'+ribo_name, read_name+'.clean.fastq', ribo_name),
+                    .format(thread, tmp_file_location+'/'+without_rrna_reads,
+                            tmp_file_location+'/'+ribo_name,
+                            read_name+'.clean.fastq',
+                            ribo_name),
                     shell=True)
 
-    print('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread, tmp_file_location+'/'+unmaped_reads, tmp_file_location+'/'+genome_fasta.split('/')[-1], tmp_file_location+'/'+without_rrna_reads, ribo_name))
+    print('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread,
+                                                                           tmp_file_location+'/'+unmaped_reads,
+                                                                           tmp_file_location+'/'+genome_fasta.split('/')[-1],
+                                                                           tmp_file_location+'/'+without_rrna_reads,
+                                                                           ribo_name))
 
-    subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread, tmp_file_location+'/'+unmaped_reads, tmp_file_location+'/'+genome_fasta.split('/')[-1], tmp_file_location+'/'+without_rrna_reads, ribo_name),shell=True)
+    subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread,
+                                                                                     tmp_file_location+'/'+unmaped_reads,
+                                                                                     tmp_file_location+'/'+genome_fasta.split('/')[-1],
+                                                                                     tmp_file_location+'/'+without_rrna_reads,
+                                                                                     ribo_name),shell=True)
 
     print('-' * 100)
     print(get_time(), 'Finished clean process.')
@@ -72,14 +89,12 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
     # Path to tophat2 result:
     tophat_result = tmp_file_location+'/'+read_name+'_tophat_result'
 
-    subprocess.call('./requiredSoft/STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'.format(thread,tmp_file_location+'/',tmp_file_location+'/'+unmaped_reads,tmp_file_location+'/all_bam/'+read_name),shell=True)
+    subprocess.call('./requiredSoft/STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'.format(thread,tmp_file_location+'/',tmp_file_location+'/'+unmaped_reads,tmp_file_location+'/all_bam/'+read_name),
+                    shell=True)
 
     print(get_time(), 'Finished mapping')
     print(get_time(), 'Start analysing...')
     print('rename bam file')
-    a=tophat_result+'/accepted_hits.bam'
-    print(a)
-    
     print('-'*100)    
 
 def find_reads_on_junction(tmp_file_location):
@@ -98,7 +113,6 @@ def find_reads_on_junction(tmp_file_location):
             print(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
             result = result.append(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
             reads_jun.append(i)
-    #print(result)
     try:
         pickle.dump(result, open('RCRJ_result', 'wb'))
         pickle.dump(reads_jun, open('reads_jun', 'wb'))
@@ -132,6 +146,9 @@ def filter_and_map_reads():
     print(get_time(), 'Totally run', hours, 'hours')
     print('-' * 100)
 
+    
+def bamtobed(bamfile):
+    subprocess.call('bedtools bamtobed -bed12 -i {} > {}.bam2bedresult.bed'.format(bamfile, bamfile))
 
 def main():
     parse = argparse.ArgumentParser(description='This script helps to clean reads and map to genome')
@@ -149,30 +166,51 @@ def main():
     tmp_file_location = fileload['tmp_file_location']
     genome_fasta = fileload['genome_fasta']
     name = fileload['genome_name']
+    merge = fileload['merge']
     genome = '{}/{}.fa'.format(tmp_file_location, name)
     
-    subprocess.call('mkdir -p {}'.format(tmp_file_location+'/all_bam'),shell=True)
-    make_index(thread, genome, ribosome, tmp_file_location, genome_fasta, name)
+    subprocess.call('mkdir -p {}'.format(tmp_file_location+'/all_bam'),
+                    shell=True)
+    make_index(thread,
+               genome,
+               ribosome,
+               tmp_file_location,
+               genome_fasta,
+               name)
 
     # use multiprocess to deal raw reads
     p = Pool(len(raw_reads))
     for raw_read in raw_reads:
         print(raw_read)
-        p.apply_async(deal_raw_data, args=(genome, raw_read, ribosome, thread, trimmomatic,riboseq_adapters,tmp_file_location,genome_fasta))
+        p.apply_async(deal_raw_data,
+                      args=(genome,
+                            raw_read,
+                            ribosome,
+                            thread,
+                            trimmomatic,
+                            riboseq_adapters,
+                            tmp_file_location,
+                            genome_fasta))
     p.close()
     p.join()
 
-
-    subprocess.call('samtools merge -f {} {}'.format(tmp_file_location+'/all_bam/total.bam',tmp_file_location+'/all_bam/*Aligned.sortedByCoord.out.bam'), shell=True)
-    subprocess.call(
-        'bedtools bamtobed -bed12 -i {} > {}/bamtobed_result.bed'
-            .format(tmp_file_location+'/all_bam/total.bam', tmp_file_location),
-        shell=True)
-    subprocess.call(
-        'bedtools merge -i {}/bamtobed_result.bed -c 1 -o count > {}/merge_result'
-            .format(tmp_file_location, tmp_file_location),
-        shell=True)
-
+    if merge == 'T':     
+        subprocess.call('samtools merge -f {} {}'.format(tmp_file_location+'/all_bam/total.bam',
+                                                         tmp_file_location+'/all_bam/*Aligned.sortedByCoord.out.bam'),
+                        shell=True)
+        subprocess.call('bedtools bamtobed -bed12 -i {} > {}/bamtobed_result.bed'.format(tmp_file_location+'/all_bam/total.bam',
+                                                                                         tmp_file_location),
+                        shell=True)
+        subprocess.call('bedtools merge -i {}/bamtobed_result.bed -c 1 -o count > {}/merge_result'.format(tmp_file_location,
+                                                                                                          tmp_file_location),
+                        shell=True)
+    else:
+        result_bam_list = list(filter(lambda x:x[-4:]=='.bam',
+                                      os.listdir(tmp_file_location)))
+        p2 = Pool(thread)
+        for bamfile in result_bam_list:
+            p2.apply_async(bamtobed,args=(bamfile))
+    
     find_reads_on_junction(tmp_file_location)
     remove_tmp_file()
 
