@@ -32,9 +32,12 @@ def make_index(thread, genome, ribosome, tmp_file_location, genome_fasta, name):
     print(get_time(), 'Make index successfully!')
     print('-' * 100)
 
-def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapters, tmp_file_location,genome_fasta):
+def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapters, tmp_file_location,genome_fasta,ribotype):
     print(get_time(), 'Start cleaning rawreads...')
-    read_name = raw_read.split('/')[-1].split('.')[-2]
+    if ribotype == 'sra':
+    	read_name = raw_read.split('/')[-1].split('.')[-2]
+    elif ribotype == 'fastq.gz':
+    	read_name = raw_read.split('/')[-1].split('.')[-3]
     ribo_name = str(ribosome).split('/')[-1].split('.')[0]
     without_rrna_reads = read_name+'.clean.without.rRNA.fastq'
     unmaped_reads = read_name+'.clean.without.rRNA.unmapped.fastq'
@@ -42,20 +45,36 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
     print('-' * 100)
 
     # Transform sra to fastq format
-    subprocess.call('fastq-dump {} -O {}'
-                    .format(raw_read,
-                            tmp_file_location),
-                    shell=True)
-    
+    if ribotype == 'sra':
+    	subprocess.call('fastq-dump {} -O {}'
+		            .format(raw_read,
+		                    tmp_file_location),
+		            shell=True)
+    else:
+        pass
+	    
     # Filter out low quality reads by Trimmomatic
-    subprocess.call('java -jar {} SE -phred33 '
-                    '{} {} ILLUMINACLIP:{}:2:30:10 '
-                    'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
-                    .format(trimmomatic,
-                            tmp_file_location+'/'+read_name+'.fastq',
-                            read_name+'.clean.fastq',
-                            riboseq_adapters),
-                    shell=True)
+    if ribotype == 'sra':
+    	subprocess.call('java -jar {} SE -threads {} -phred33 '
+		            '{} {} ILLUMINACLIP:{}:2:30:10 '
+		            'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
+		            .format(trimmomatic,thread,
+		                    tmp_file_location+'/'+read_name+'.fastq',
+		                    read_name+'.clean.fastq',
+		                    riboseq_adapters),
+		            shell=True)
+	    
+    elif ribotype == 'fastq.gz':
+    	subprocess.call('java -jar {} SE -threads {} -phred33 '
+		            '{} {} ILLUMINACLIP:{}:2:30:10 '
+		            'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
+		            .format(trimmomatic,
+                            thread,
+		                    raw_read,
+		                    read_name+'.clean.fastq',
+		                    riboseq_adapters),
+		            shell=True)
+    		            
     
     # Map clean reads to ribosome sequence by bowtie
     subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_rRNA.sam'
@@ -167,6 +186,7 @@ def main():
     genome_fasta = fileload['genome_fasta']
     name = fileload['genome_name']
     merge = fileload['merge']
+    ribotype = fileload['ribotype']
     genome = '{}/{}.fa'.format(tmp_file_location, name)
     
     subprocess.call('mkdir -p {}'.format(tmp_file_location+'/all_bam'),
@@ -190,7 +210,8 @@ def main():
                             trimmomatic,
                             riboseq_adapters,
                             tmp_file_location,
-                            genome_fasta))
+                            genome_fasta,
+                            ribotype))
     p.close()
     p.join()
 
@@ -217,4 +238,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
