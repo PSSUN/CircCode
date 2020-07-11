@@ -215,22 +215,8 @@ def main():
                genome_fasta,
                name)
 
-    # use multiprocess to deal raw reads
-    p = Pool(len(raw_reads))
     for raw_read in raw_reads:
-        print(raw_read)
-        p.apply_async(deal_raw_data,
-                      args=(genome,
-                            raw_read,
-                            ribosome,
-                            thread,
-                            trimmomatic,
-                            riboseq_adapters,
-                            tmp_file_location,
-                            genome_fasta,
-                            ribotype))
-    p.close()
-    p.join()
+        deal_raw_data(genome,raw_read,ribosome,thread,trimmomatic,riboseq_adapters,tmp_file_location,genome_fasta,ribotype)
 
     if merge == 'T':
         print('-'*20)
