@@ -60,7 +60,7 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
 		            'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
 		            .format(trimmomatic,thread,
 		                    tmp_file_location+'/'+read_name+'.fastq',
-		                    read_name+'.clean.fastq',
+		                    tmp_file_location+'/'+read_name+'.clean.fastq',
 		                    riboseq_adapters),
 		            shell=True)
 	    
@@ -70,7 +70,7 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
 		            'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
 		            .format(trimmomatic,thread,
 		                    raw_read,
-		                    read_name+'.clean.fastq',
+		                    tmp_file_location+'/'+read_name+'.clean.fastq',
 		                    riboseq_adapters),
 		            shell=True)
     		            
@@ -80,21 +80,21 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
     subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_rRNA.sam'
                     .format(thread, tmp_file_location+'/'+without_rrna_reads,
                             tmp_file_location+'/'+ribo_name,
-                            read_name+'.clean.fastq',
-                            ribo_name),
+                            tmp_file_location+'/'+read_name+'.clean.fastq',
+                            tmp_file_location+'/'+ribo_name),
                     shell=True)
     print('remove liner sequence')
     print('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread,
                                                                            tmp_file_location+'/'+unmaped_reads,
                                                                            tmp_file_location+'/'+genome_fasta.split('/')[-1],
                                                                            tmp_file_location+'/'+without_rrna_reads,
-                                                                           ribo_name))
+                                                                           tmp_file_location+'/'+ribo_name))
 
     subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread,
                                                                                      tmp_file_location+'/'+unmaped_reads,
                                                                                      tmp_file_location+'/'+genome_fasta.split('/')[-1],
                                                                                      tmp_file_location+'/'+without_rrna_reads,
-                                                                                     ribo_name),shell=True)
+                                                                                     tmp_file_location+'/'+ribo_name),shell=True)
 
     print('-' * 100)
     print(get_time(), 'Finished clean process.')
@@ -125,7 +125,7 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
 def find_reads_on_junction(tmp_file_location,merge_result):
 	
     result = pd.DataFrame(columns=['a', 'b', 'c', 'd'])
-    print(result)
+    # print(result)
     junction_file = tmp_file_location+'/junction'
     merge_result_file = tmp_file_location+'/'+merge_result
     reads_jun = []
@@ -136,16 +136,16 @@ def find_reads_on_junction(tmp_file_location,merge_result):
         if merge_result.loc[(merge_result.b < i) & (i < merge_result.c)].empty:
             pass
         else:
-            print(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
+            # print(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
             result = result.append(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
             reads_jun.append(i)
     try:
-        pickle.dump(result, open('RCRJ_result', 'wb'))
-        pickle.dump(reads_jun, open('reads_jun', 'wb'))
+        pickle.dump(result, open(tmp_file_location+'/'+merge_result+'_RCRJ_result', 'wb'))
+        pickle.dump(reads_jun, open(tmp_file_location+'/'+merge_result+'_reads_jun', 'wb'))
     except:
         print('Error while dumping RCRJ_result')
     result.to_csv(tmp_file_location +'/'+merge_result + '.junction_result', sep='\t', header=0, index=False)
-
+    print('find_reads_on_junction finashed. ')
 
 def remove_tmp_file():
     subprocess.call('mkdir -p reads', shell=True)
@@ -215,6 +215,7 @@ def main():
                genome_fasta,
                name)
 
+    # use multiprocess to deal raw reads
     for raw_read in raw_reads:
         deal_raw_data(genome,raw_read,ribosome,thread,trimmomatic,riboseq_adapters,tmp_file_location,genome_fasta,ribotype)
 
