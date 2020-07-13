@@ -250,6 +250,7 @@ def main():
         
     
     if merge == 'T':
+	merge_result_name = 'merge_result'  
         find_reads_on_junction(tmp_file_location,merge_result)
     else:
         print('analysis junction reads...')
