@@ -67,4 +67,4 @@ coverage_counts: 10
 thread: 6
 
 # merge all the NGS data: T or F
-merge: T
+merge: F
