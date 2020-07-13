@@ -122,29 +122,29 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
     print(get_time(), 'Start analysing...')
 
 
-def find_reads_on_junction(tmp_file_location,merge_result):
+def find_reads_on_junction(tmp_file_location,merge_result_name):
 	
     result = pd.DataFrame(columns=['a', 'b', 'c', 'd'])
-    # print(result)
     junction_file = tmp_file_location+'/junction'
-    merge_result_file = tmp_file_location+'/'+merge_result
+    merge_result_file = tmp_file_location+'/'+merge_result_name
     reads_jun = []
     merge_result = pd.read_csv(merge_result_file, sep='\t', low_memory=True, header=None)
     merge_result.columns = ['a', 'b', 'c', 'd']
     junction = pickle.load(open(junction_file, 'rb'))
-    for i in junction:
+    for i in junction[:1000]:
         if merge_result.loc[(merge_result.b < i) & (i < merge_result.c)].empty:
             pass
         else:
-            # print(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
             result = result.append(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
             reads_jun.append(i)
+             
     try:
-        pickle.dump(result, open(tmp_file_location+'/'+merge_result+'_RCRJ_result', 'wb'))
-        pickle.dump(reads_jun, open(tmp_file_location+'/'+merge_result+'_reads_jun', 'wb'))
+        pickle.dump(result, open(tmp_file_location+'/'+merge_result_name+'.RCRJ_result', 'wb'))
+        pickle.dump(reads_jun, open(tmp_file_location+'/'+merge_result_name+'.reads_jun', 'wb'))
     except:
         print('Error while dumping RCRJ_result')
-    result.to_csv(tmp_file_location +'/'+merge_result + '.junction_result', sep='\t', header=0, index=False)
+
+    result.to_csv(tmp_file_location+'/'+merge_result_name+'.RCRJ_result.csv', sep='\t', header=0, index=False)
     print('find_reads_on_junction finashed. ')
 
 def remove_tmp_file():
@@ -208,6 +208,7 @@ def main():
     
     subprocess.call('mkdir -p {}'.format(tmp_file_location+'/all_bam'),
                     shell=True)
+
     make_index(thread,
                genome,
                ribosome,
@@ -246,6 +247,8 @@ def main():
             p2.apply_async(bamtobed,args=(bamfile,tmp_file_location))
         p2.close()
         p2.join() 
+        
+    
     if merge == 'T':
         find_reads_on_junction(tmp_file_location,merge_result)
     else:
@@ -255,8 +258,8 @@ def main():
         print(merge_files)
         print('-'*20)
         p3 = Pool(len(merge_files))
-        for merge_result in merge_files:
-            p3.apply_async(find_reads_on_junction,args=(tmp_file_location, merge_result))
+        for merge_result_name in merge_files:
+            p3.apply_async(find_reads_on_junction,args=(tmp_file_location, merge_result_name))
         p3.close()
         p3.join()         
         
