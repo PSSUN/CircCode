@@ -43,14 +43,27 @@ class Translate(object):
 
 def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts):
     tmp = tmp_file_location+'/'+'tmp_file'
+    
+    # virGenome
     circ = tmp_file_location+'/'+name+'.fa'
     print(circ)
+    
     RCRJ = tmp_file_location+'/'+'RCRJ.fa'
     
-    subprocess.call('''awk '$4>{} {}' {} > {}'''.format(coverage_counts,'{print $0}',tmp_file_location+'/'+'junction_result',tmp_file_location+'/'+'junction_filter_result'), shell=True)
-    #getfasta
+    # filter by reads number
+    subprocess.call('''awk '$4>{} {}' {} > {}'''
+                    .format(coverage_counts,
+                            '{print $0}',
+                            tmp_file_location+'/'+'junction_result',
+                            tmp_file_location+'/'+'junction_filter_result'), 
+                    shell=True)
+    
+    #get RCRJ fasta by junction_filter_result
     subprocess.call('bedtools getfasta -s -fi {} -bed {}  -split -name | fold -w 60 > {}'
-    .format(circ,tmp_file_location+'/'+'junction_filter_result',RCRJ),shell=True)
+                    .format(circ,
+                            tmp_file_location+'/'+'junction_filter_result',
+                            RCRJ),
+                    shell=True)
     
     r_script = '''
     library(Biostrings)
@@ -69,7 +82,13 @@ def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts)
     
     writeXStringSet(mRNA_seq,filepath = '{}')
     print(length(mRNA_seq))
-    '''.format(coding_seq, non_coding_seq, tmp, RCRJ, tmp+'.dat', RCRJ, tmp_file_location+'/'+'translated_circ.fa')
+    '''.format(coding_seq,
+               non_coding_seq,
+               tmp,
+               RCRJ,
+               tmp+'.dat',
+               RCRJ,
+               tmp_file_location+'/'+'translated_circ.fa')
     print(r_script)
     f=open('r_script.r','w')
     f.write(r_script)
