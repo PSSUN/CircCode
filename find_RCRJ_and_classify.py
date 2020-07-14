@@ -6,6 +6,7 @@ import re
 import argparse
 import subprocess
 import rpy2.robjects as robjects
+import os
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -41,29 +42,17 @@ class Translate(object):
 # MODEL = RF
 # CALL = R LANGUAGE
 
-def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts):
+def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge):
     tmp = tmp_file_location+'/'+'tmp_file'
-    
-    # virGenome
     circ = tmp_file_location+'/'+name+'.fa'
     print(circ)
+    RCRJ = tmp_file_location+'/'+rcrj+'RCRJ.fa'
     
-    RCRJ = tmp_file_location+'/'+'RCRJ.fa'
+    subprocess.call('''awk '$4>{} {}' {} > {}'''.format(coverage_counts,'{print $0}',tmp_file_location+'/'+rcrj, tmp_file_location+'/'+rcrj+'.junction_filter_result'), shell=True)
     
-    # filter by reads number
-    subprocess.call('''awk '$4>{} {}' {} > {}'''
-                    .format(coverage_counts,
-                            '{print $0}',
-                            tmp_file_location+'/'+'junction_result',
-                            tmp_file_location+'/'+'junction_filter_result'), 
-                    shell=True)
-    
-    #get RCRJ fasta by junction_filter_result
+    #getfasta
     subprocess.call('bedtools getfasta -s -fi {} -bed {}  -split -name | fold -w 60 > {}'
-                    .format(circ,
-                            tmp_file_location+'/'+'junction_filter_result',
-                            RCRJ),
-                    shell=True)
+    .format(circ,tmp_file_location+'/'+rcrj+'.junction_filter_result',RCRJ),shell=True)
     
     r_script = '''
     library(Biostrings)
@@ -82,15 +71,10 @@ def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts)
     
     writeXStringSet(mRNA_seq,filepath = '{}')
     print(length(mRNA_seq))
-    '''.format(coding_seq,
-               non_coding_seq,
-               tmp,
-               RCRJ,
-               tmp+'.dat',
-               RCRJ,
-               tmp_file_location+'/'+'translated_circ.fa')
-    print(r_script)
-    f=open('r_script.r','w')
+    '''.format(coding_seq, non_coding_seq, tmp, RCRJ, tmp+'.dat', RCRJ, tmp_file_location+'/'+'translated_circ.fa')
+    # print(r_script)
+    
+    f = open('r_script.r','w')
     f.write(r_script)
     f.close()
     subprocess.call('Rscript r_script.r', shell=True)
@@ -291,7 +275,17 @@ def main():
     raw_read = fileload['raw_reads']
     result_file_location = fileload['result_file_location']
     coverage_counts = fileload['coverage_counts']
-    classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts)
+    merge = fileload['merge']
+    
+    if merge == 'T':
+    	classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge)
+    else:
+    	rcrj_results = list(filter(lambda x:x[-15:] == 'RCRJ_result.csv', os.listdir(tmp_file_location)))
+    	for rcrj in rcrj_results:
+    		classify(coding_seq, non_coding_seq, tmp_file_location, name, coverage_counts, rcrj, merge)
+    	    
+    
+    
     # subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+'translated_circ.fa'),shell=True)
     # Translate
     raw_read = raw_read[0]
