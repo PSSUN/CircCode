@@ -278,6 +278,7 @@ def main():
     merge = fileload['merge']
     
     if merge == 'T':
+        rcrj = list(filter(lambda x:x[-15:] == 'RCRJ_result.csv', os.listdir(tmp_file_location)))[0]
     	classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge)
     else:
     	rcrj_results = list(filter(lambda x:x[-15:] == 'RCRJ_result.csv', os.listdir(tmp_file_location)))
