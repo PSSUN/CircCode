@@ -131,7 +131,7 @@ def find_reads_on_junction(tmp_file_location,merge_result_name):
     merge_result = pd.read_csv(merge_result_file, sep='\t', low_memory=True, header=None)
     merge_result.columns = ['a', 'b', 'c', 'd']
     junction = pickle.load(open(junction_file, 'rb'))
-    for i in junction[:1000]:
+    for i in junction:
         if merge_result.loc[(merge_result.b < i) & (i < merge_result.c)].empty:
             pass
         else:
