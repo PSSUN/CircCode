@@ -5,7 +5,7 @@ import pickle
 import re
 import argparse
 import subprocess
-import rpy2.robjects as robjects
+# import rpy2.robjects as robjects
 import os
 
 from Bio import SeqIO
@@ -42,18 +42,21 @@ class Translate(object):
 # MODEL = RF
 # CALL = R LANGUAGE
 
-def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge):
+def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge, circrnas,result_file_location):
     tmp = tmp_file_location+'/'+'tmp_file'
     circ = tmp_file_location+'/'+name+'.fa'
     print(circ)
-    RCRJ = tmp_file_location+'/'+rcrj+'RCRJ.fa'
+    RCRJ = tmp_file_location+'/'+rcrj+'_RCRJ.fa'
     
     subprocess.call('''awk '$4>{} {}' {} > {}'''.format(coverage_counts,'{print $0}',tmp_file_location+'/'+rcrj, tmp_file_location+'/'+rcrj+'.junction_filter_result'), shell=True)
     
     #getfasta
-    subprocess.call('bedtools getfasta -s -fi {} -bed {}  -split -name | fold -w 60 > {}'
+    subprocess.call('bedtools getfasta -s -fi {} -bed {} -split | fold -w 60 > {}'
     .format(circ,tmp_file_location+'/'+rcrj+'.junction_filter_result',RCRJ),shell=True)
-    
+    print('bedtools getfasta -s -fi {} -bed {}  -split -name | fold -w 60 > {}'
+    .format(circ,tmp_file_location+'/'+rcrj+'.junction_filter_result',RCRJ))
+
+
     r_script = '''
     library(Biostrings)
     library(BASiNET)
@@ -71,16 +74,39 @@ def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts,
     
     writeXStringSet(mRNA_seq,filepath = '{}')
     print(length(mRNA_seq))
-    '''.format(coding_seq, non_coding_seq, tmp, RCRJ, tmp+'.dat', RCRJ, tmp_file_location+'/'+'translated_circ.fa')
+    '''.format(coding_seq, non_coding_seq, tmp, RCRJ, tmp+'.dat', RCRJ, tmp_file_location+'/'+rcrj+'_translated_circ.fa')
     # print(r_script)
     
-    f = open('r_script.r','w')
+    f = open(tmp_file_location+'/{}_rscript.r'.format(rcrj),'w')
     f.write(r_script)
     f.close()
-    subprocess.call('Rscript r_script.r', shell=True)
+    subprocess.call('Rscript '+tmp_file_location+'/{}_rscript.r'.format(rcrj), shell=True)
     print('Classify successfully!')
-    subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+'translated_circ.fa'),shell=True)
-    #robjects.r(r_script)tmp_file_location
+    subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+rcrj+'_translated_circ.fa'),shell=True)
+    final_trans_file = tmp_file_location+'/'+rcrj+'_translated_circ.fa'
+    seqs = SeqIO.parse(final_trans_file, 'fasta')
+    id_dic = pickle.load(open(tmp_file_location+'/junction_name_dic','rb'))
+    translated_circ_id_list = []
+    for seq in seqs:
+        for i in id_dic:
+            start = seq.id.split(':')[-1].split('-')[0]
+            end = seq.id.split(':')[-1].split('-')[1]
+            if int(start) < int(i) < int(end):
+                break
+    total_circ = SeqIO.parse(circrnas, 'fasta')
+    final_trans_circ_seq = []
+    for i in total_circ:
+        if i.id in translated_circ_id_list:
+            final_trans_circ_seq.append(i)
+            print(i)
+    fastqid = rcrj.split('A')[0]
+    
+    final_trans_circ_seq_name = result_file_location+'/'+fastqid+'.fa'
+    subprocess.call('mkdir -p {}'.format(result_file_location),shell=True)
+    SeqIO.write(final_trans_circ_seq, final_trans_circ_seq_name, 'fasta')
+
+
+
 
 # Find the longest peptide that can be translated from the three reading frames
 def find_longest(tmp_file_location, raw_read, result_file_location, number):
@@ -205,13 +231,15 @@ def find_longest(tmp_file_location, raw_read, result_file_location, number):
         for j in id_dic:
             if str(i) == str(j):
                 final_dic[id_dic[i]] = peptide_position[i]
-    # ----------------------------------------------------pickle.dump(self.junction, open('junction', 'wb'))
+    # ----------------------------------------------------
+    # pickle.dump(self.junction, open('junction', 'wb'))
     # pickle.dump(final_dic, open('final_dic', 'wb'))
     # pickle.dump(length_dic, open('length_dic', 'wb'))
     #
     # final_dic = pickle.load(open('final_dic', 'rb'))
     # length_dic = pickle.load(open('length_dic', 'rb'))
     # final_genome = SeqRecord(Seq(str(self.genome)), id='1_CircularRNA', description='DoubleSeqWith50N')
+    # -----------------------------------------------------
     seq_list = []
     #print('step3')
     seqs = SeqIO.parse('{}'.format(trans_seq), 'fasta')
@@ -259,6 +287,13 @@ def find_longest(tmp_file_location, raw_read, result_file_location, number):
     SeqIO.write(seq_list, '{}'.format(tmp_file_location+'/'+'result_pep_{}.fa'.format(number)), 'fasta')
 
 
+def fhs(result_file_location):
+    fa_list = list(filter(lambda x:x[-3:]=='.fa',os.listdir(result_file_location)))
+    for i in fa_list:
+        subprocess.call('./requiredSoft/FragGeneScan -s {} -o {} -w 0 -t complete'
+                    .format(result_file_location+'/'+i,
+                            result_file_location+'/'+i.split('.')[0]+'_translated_peptides.fa'),
+                    shell=True)
 def main():
     parse = argparse.ArgumentParser(description='This script helps to clean reads and map to genome')
     parse.add_argument('-y', dest="yaml", required=True)
@@ -276,30 +311,29 @@ def main():
     result_file_location = fileload['result_file_location']
     coverage_counts = fileload['coverage_counts']
     merge = fileload['merge']
+    circrnas = fileload['circrnas']
+    result_file_location = fileload['result_file_location']
     
     if merge == 'T':
-        rcrj = list(filter(lambda x:x[-15:] == 'RCRJ_result.csv', os.listdir(tmp_file_location)))[0]
-    	classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge)
+    	classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge,circrnas,result_file_location)
     else:
     	rcrj_results = list(filter(lambda x:x[-15:] == 'RCRJ_result.csv', os.listdir(tmp_file_location)))
     	for rcrj in rcrj_results:
-    		classify(coding_seq, non_coding_seq, tmp_file_location, name, coverage_counts, rcrj, merge)
-    	    
+    		classify(coding_seq, non_coding_seq, tmp_file_location, name, coverage_counts, rcrj, merge,circrnas,result_file_location)
+    
+    fhs(result_file_location)    
     
     
     # subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+'translated_circ.fa'),shell=True)
     # Translate
-    raw_read = raw_read[0]
-    ribo_name = raw_read.split('/')[-1].split('.')[0]
-    file = tmp_file_location+'/'+'translated_circ.fa'
-    print(file)
-    handle = Translate(file, tmp_file_location)
-    handle.translate()
+    # raw_read = raw_read[0]
+    # ribo_name = raw_read.split('/')[-1].split('.')[0]
+    # file = tmp_file_location+'/'+'translated_circ.fa'
+    # print(file)
+#    handle = Translate(file, tmp_file_location)
+#    handle.translate()
     
-    # Find longest peptide
-
-    # for number in range(1,4):
-    #    find_longest(tmp_file_location, ribo_name, result_file_location, number)
+    
     
 
 if __name__ == '__main__':
