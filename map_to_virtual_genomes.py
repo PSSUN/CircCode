@@ -140,10 +140,9 @@ def find_reads_on_junction(tmp_file_location,merge_result_name):
         else:
             result = result.append(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
             reads_jun.append(i)
-            print(i)
             tmp_id = jun_name_dic_pickle[i]
             circ_id.append(tmp_id)
-            print('added') 
+
 
 
     print('dump data...')
