@@ -93,11 +93,7 @@ CircCode is a Python3-base pipeline for translated circular RNA identification. 
   ```python
    python3 find_RCRJ_and_classify.py -y config.yaml
   ```
-  5. Find longest peptide of translated circRNA
 
- ```python
-  python3 find_longest_pep.py -y config.yaml
- ```
 ---
 ## Run example
 
