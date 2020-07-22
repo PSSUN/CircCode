@@ -123,7 +123,7 @@ def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapt
 
 
 def find_reads_on_junction(tmp_file_location,merge_result_name):
-	
+    jun_name_dic_pickle = pickle.load(open(tmp_file_location+'/junction_name_dic','rb'))
     result = pd.DataFrame(columns=['a', 'b', 'c', 'd'])
     junction_file = tmp_file_location+'/junction'
     merge_result_file = tmp_file_location+'/'+merge_result_name
@@ -131,16 +131,27 @@ def find_reads_on_junction(tmp_file_location,merge_result_name):
     merge_result = pd.read_csv(merge_result_file, sep='\t', low_memory=True, header=None)
     merge_result.columns = ['a', 'b', 'c', 'd']
     junction = pickle.load(open(junction_file, 'rb'))
+    
+    circ_id = []
+    
     for i in junction:
         if merge_result.loc[(merge_result.b < i) & (i < merge_result.c)].empty:
             pass
         else:
             result = result.append(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
             reads_jun.append(i)
-             
+            print(i)
+            tmp_id = jun_name_dic_pickle[i]
+            circ_id.append(tmp_id)
+            print('added') 
+
+
+    print('dump data...')
     try:
+        pickle.dump(circ_id, open(tmp_file_location+'/'+merge_result_name+'.trans_circ_id', 'wb'))
         pickle.dump(result, open(tmp_file_location+'/'+merge_result_name+'.RCRJ_result', 'wb'))
         pickle.dump(reads_jun, open(tmp_file_location+'/'+merge_result_name+'.reads_jun', 'wb'))
+        
     except:
         print('Error while dumping RCRJ_result')
 
@@ -191,7 +202,7 @@ def main():
 
     yamlfile  = args.yaml
     file      = open(yamlfile)
-    fileload  = yaml.load(file)
+    fileload  = yaml.load(file, Loader=yaml.FullLoader)
     raw_reads = fileload['raw_reads']
     thread    = fileload['thread']
     ribosome  = fileload['ribosome_fasta']
@@ -250,24 +261,21 @@ def main():
         
     
     if merge == 'T':
-	merge_result_name = 'merge_result'  
-        find_reads_on_junction(tmp_file_location,merge_result)
+        print('analysis junction reads...')
+        merge_result_name = 'merge_result'        
+        find_reads_on_junction(tmp_file_location,merge_result_name)
     else:
         print('analysis junction reads...')
+        
+
         merge_files = list(filter(lambda x:x[-12:] == 'merge_result', os.listdir(tmp_file_location)))
-        print('-'*20)
-        print(merge_files)
-        print('-'*20)
-        p3 = Pool(len(merge_files))
+        p3 = Pool(thread)
         for merge_result_name in merge_files:
             p3.apply_async(find_reads_on_junction,args=(tmp_file_location, merge_result_name))
         p3.close()
         p3.join()         
         
                    
-
-#    remove_tmp_file()
-
-
 if __name__ == '__main__':
     main()
+
