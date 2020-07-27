@@ -187,7 +187,10 @@ When opening the config file in text format, there are some lines that need to b
    4. **Q: What result file means?**
       
       **A:** Please see [here](https://github.com/hallamlab/FragGeneScanPlus/wiki)
-   
+
+---
+## Taking code from GitHub and running on your data  ：)
+![pic](https://preview.redd.it/j7p8pwto6ix41.jpg?width=640&crop=smart&auto=webp&s=30819ac5966cbf2df01303f22be27fd0b1967b55)
    
 ---
 ## Citation
