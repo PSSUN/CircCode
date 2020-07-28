@@ -68,3 +68,6 @@ thread: 6
 
 # merge all the NGS data: T or F
 merge: F
+
+# Weather classify the sequences by BASiNET: T or F
+classify: T
