@@ -42,7 +42,17 @@ class Translate(object):
 # MODEL = RF
 # CALL = R LANGUAGE
 
-def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge, circrnas,result_file_location):
+def classify(coding_seq,
+             non_coding_seq, 
+             tmp_file_location,
+             name,
+             coverage_counts,
+             rcrj, 
+             merge, 
+             circrnas,
+             result_file_location,
+             use_classify):
+             
     tmp = tmp_file_location+'/'+'tmp_file'
     circ = tmp_file_location+'/'+name+'.fa'
     print(circ)
@@ -53,8 +63,6 @@ def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts,
     #getfasta
     subprocess.call('bedtools getfasta -s -fi {} -bed {} -split | fold -w 60 > {}'
     .format(circ,tmp_file_location+'/'+rcrj+'.junction_filter_result',RCRJ),shell=True)
-    print('bedtools getfasta -s -fi {} -bed {}  -split -name | fold -w 60 > {}'
-    .format(circ,tmp_file_location+'/'+rcrj+'.junction_filter_result',RCRJ))
 
 
     r_script = '''
@@ -74,14 +82,23 @@ def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts,
     
     writeXStringSet(mRNA_seq,filepath = '{}')
     print(length(mRNA_seq))
-    '''.format(coding_seq, non_coding_seq, tmp, RCRJ, tmp+'.dat', RCRJ, tmp_file_location+'/'+rcrj+'_translated_circ.fa')
-    # print(r_script)
+    '''.format(coding_seq, 
+               non_coding_seq, 
+               tmp, RCRJ, tmp+'.dat', 
+               RCRJ, 
+               tmp_file_location+'/'+rcrj+'_translated_circ.fa')
     
-    f = open(tmp_file_location+'/{}_rscript.r'.format(rcrj),'w')
-    f.write(r_script)
-    f.close()
-    subprocess.call('Rscript '+tmp_file_location+'/{}_rscript.r'.format(rcrj), shell=True)
-    print('Classify successfully!')
+    
+    if use_classify == 'T':
+        f = open(tmp_file_location+'/{}_rscript.r'.format(rcrj),'w')
+        f.write(r_script)
+        f.close()
+        subprocess.call('Rscript '+tmp_file_location+'/{}_rscript.r'.format(rcrj), shell=True)
+        print('Classify successfully!')
+    else:
+        subprocess.call('mv {} {}'.format(RCRJ, tmp_file_location+'/'+rcrj+'_translated_circ.fa'),shell=True)
+        pass
+    
     subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+rcrj+'_translated_circ.fa'),shell=True)
     final_trans_file = tmp_file_location+'/'+rcrj+'_translated_circ.fa'
     seqs = SeqIO.parse(final_trans_file, 'fasta')
@@ -109,7 +126,11 @@ def classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts,
 
 
 # Find the longest peptide that can be translated from the three reading frames
-def find_longest(tmp_file_location, raw_read, result_file_location, number):
+def find_longest(tmp_file_location, 
+                 raw_read, 
+                 result_file_location, 
+                 number):
+
     trans_seq = tmp_file_location+'/'+'RCRJ_translated_{}.fa'.format(number)
     junction = pickle.load(open('{}'.format(tmp_file_location+'/'+'junction'), 'rb'))
     seqs = SeqIO.parse('{}'.format(trans_seq), 'fasta')
@@ -287,13 +308,15 @@ def find_longest(tmp_file_location, raw_read, result_file_location, number):
     SeqIO.write(seq_list, '{}'.format(tmp_file_location+'/'+'result_pep_{}.fa'.format(number)), 'fasta')
 
 
-def fhs(result_file_location):
+def fgs(result_file_location):
     fa_list = list(filter(lambda x:x[-3:]=='.fa',os.listdir(result_file_location)))
     for i in fa_list:
         subprocess.call('./requiredSoft/FragGeneScan -s {} -o {} -w 0 -t complete'
                     .format(result_file_location+'/'+i,
                             result_file_location+'/'+i.split('.')[0]+'_translated_peptides.fa'),
                     shell=True)
+
+
 def main():
     parse = argparse.ArgumentParser(description='This script helps to clean reads and map to genome')
     parse.add_argument('-y', dest="yaml", required=True)
@@ -313,27 +336,34 @@ def main():
     merge = fileload['merge']
     circrnas = fileload['circrnas']
     result_file_location = fileload['result_file_location']
+    use_classify = fileload['classify']
     
+
     if merge == 'T':
-    	classify(coding_seq, non_coding_seq, tmp_file_location,name,coverage_counts, rcrj, merge,circrnas,result_file_location)
+    	classify(coding_seq,
+                 non_coding_seq, 
+                 tmp_file_location,
+                 name,
+                 coverage_counts, 
+                 rcrj, 
+                 merge,
+                 circrnas,
+                 result_file_location,
+                 use_classify)
     else:
     	rcrj_results = list(filter(lambda x:x[-15:] == 'RCRJ_result.csv', os.listdir(tmp_file_location)))
     	for rcrj in rcrj_results:
-    		classify(coding_seq, non_coding_seq, tmp_file_location, name, coverage_counts, rcrj, merge,circrnas,result_file_location)
+    		classify(coding_seq, 
+                     non_coding_seq, 
+                     tmp_file_location, 
+                     name, 
+                     coverage_counts, 
+                     rcrj, 
+                     merge,circrnas,
+                     result_file_location,
+                     use_classify)
     
-    fhs(result_file_location)    
-    
-    
-    # subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+'translated_circ.fa'),shell=True)
-    # Translate
-    # raw_read = raw_read[0]
-    # ribo_name = raw_read.split('/')[-1].split('.')[0]
-    # file = tmp_file_location+'/'+'translated_circ.fa'
-    # print(file)
-#    handle = Translate(file, tmp_file_location)
-#    handle.translate()
-    
-    
+    fgs(result_file_location)    
     
 
 if __name__ == '__main__':
