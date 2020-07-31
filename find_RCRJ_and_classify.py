@@ -5,7 +5,6 @@ import pickle
 import re
 import argparse
 import subprocess
-# import rpy2.robjects as robjects
 import os
 
 from Bio import SeqIO
@@ -97,7 +96,6 @@ def classify(coding_seq,
         print('Classify successfully!')
     else:
         subprocess.call('mv {} {}'.format(RCRJ, tmp_file_location+'/'+rcrj+'_translated_circ.fa'),shell=True)
-        pass
     
     subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+rcrj+'_translated_circ.fa'),shell=True)
     final_trans_file = tmp_file_location+'/'+rcrj+'_translated_circ.fa'
@@ -109,6 +107,7 @@ def classify(coding_seq,
             start = seq.id.split(':')[-1].split('-')[0]
             end = seq.id.split(':')[-1].split('-')[1]
             if int(start) < int(i) < int(end):
+                translated_circ_id_list.append(id_dic[i])
                 break
     total_circ = SeqIO.parse(circrnas, 'fasta')
     final_trans_circ_seq = []
