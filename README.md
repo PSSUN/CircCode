@@ -199,7 +199,7 @@ When opening the config file in text format, there are some lines that need to b
 
 ## Acknowledge
  - Zhang Jinwen’s (1276515512@qq.com) suggestion for the scripts was adopted.
-
+ - [luhan125](https://github.com/luhan125)’s suggestion for the scripts was adopted.
 ## Contact us
 
 If you encounter any problems while using CircCode, please send an email (sps@snnu.edu.cn / glli@snnu.edu.cn) or submit the issues on GitHub (https://github.com/Sunpeisen/circCode/issues) and we will resolve it as soon as possible.
