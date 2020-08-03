@@ -71,3 +71,6 @@ merge: F
 
 # Weather classify the sequences by BASiNET: T or F
 classify: T
+
+# type of Ribo-seq data, value: sra or fastq.gz
+ribotype: fastq.gz
