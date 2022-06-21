@@ -15,7 +15,7 @@ biopython == 1.72
 matplotlib == 2.2.2
 
 # bedtools-2.26.0/bedtools2/test/fisher/plot.py: 3
-numpy == 1.14.5
+numpy == 1.22.0
 
 # bedtools-2.26.0/bedtools2/test/fisher/plot.py: 4
 # make_virtual_genomes.py: 6
