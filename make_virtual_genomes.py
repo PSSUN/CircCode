@@ -8,16 +8,16 @@ import subprocess
 import pickle
 import argparse
 import yaml
+import os
 
 
 class Genome(object):
 
     def __init__(self, circ_rnas, tmp_file_location):
         self.circ_rnas = circ_rnas
-        self.genome = ''
-        self.genome_1 = ''
-        self.genome_2 = ''
-        self.genome_3 = ''
+        # store pieces of genome sequence in a list to avoid
+        # expensive string concatenation inside the loop
+        self.genome_parts = []
         self.newGenome = []
         self.circ_name = []
         self.start = []
@@ -34,92 +34,31 @@ class Genome(object):
         n = 1
         for circrna in self.circ_rnas:
 
-            # The same behavior was repeated three times because they
-            # correspond to genes, transcripts, and exons, respectively.
-            # Writing in this way can look more clear, as well as the following.
-            # So you can easily change the value of each line in gff file under your situation.
-            
-            # -----gene-----
-            self.circ_name.append(
-                'gene_id "{}";'
-                ' transcript_id "{}";'
+            # The same annotation description is required three times:
+            # gene, transcript and exon.  Build it once and reuse.
+            feature_desc = (
+                'gene_id "{0}";'
+                ' transcript_id "{0}";'
                 ' exon_number "1";'
-                ' gene_name "{}";'
+                ' gene_name "{0}";'
                 ' gene_source "araport11";'
                 ' gene_biotype "protein_coding";'
                 ' transcript_source "araport11";'
-                ' protein_id "{}";'
+                ' protein_id "{0}";'
                 ' protein_version "1";'
-                .format(circrna.id, circrna.id, circrna.id, circrna.id))
-
-            # -----transcript-----
-            self.circ_name.append(
-                'gene_id "{}";'
-                ' transcript_id "{}";'
-                ' exon_number "1";'
-                ' gene_name "{}";'
-                ' gene_source "araport11";'
-                ' gene_biotype "protein_coding";'
-                ' transcript_source "araport11";'
-                ' protein_id "{}";'
-                ' protein_version "1";'
-                .format(circrna.id, circrna.id, circrna.id, circrna.id))
-
-            # -----exon-----
-            self.circ_name.append(
-                'gene_id "{}";'
-                ' transcript_id "{}";'
-                ' exon_number "1";'
-                ' gene_name "{}";'
-                ' gene_source "araport11";'
-                ' gene_biotype "protein_coding";'
-                ' transcript_source "araport11";'
-                ' protein_id "{}";'
-                ' protein_version "1";'
-                .format(circrna.id, circrna.id, circrna.id, circrna.id))
+            ).format(circrna.id)
+            self.circ_name.extend([feature_desc] * 3)
 
             # This step aims to cut candidate sequences which are longer than 500bp
-            print('No.',n,'length:',len(circrna))
-            
-            # time.sleep(2)
-            # time was used to debug here for developer.
-            
-            # The length of each list is set the limitation of 30000
-            # If list is too large, it will cost much time to append() sequence.
-            
-            # The length of each circRNA was no more than 500bp
-            # Because we only focus on the junction site of each circRNA
-            # If the length is longer than 500bp, the longer part of circRNA will be cut off.
-            if n <= 30000:
-                if len(circrna) <= 500:
-                    self.genome += (circrna.seq * 2 + polyN)
-                    self.increase_length += len(circrna) * 2 + N_number
-                else:
-                    self.genome += (circrna.seq[-500:] + circrna.seq[:500] + polyN)
-                    self.increase_length += (1000+N_number)
-            elif 30000 < n <= 60000:
-                if len(circrna) <= 500:
-                    self.genome_1 += (circrna.seq * 2 + polyN)
-                    self.increase_length += len(circrna) * 2 + N_number
-                else:
-                    self.genome_1 += (circrna.seq[-500:] + circrna.seq[:500] + polyN)
-                    self.increase_length += (1000+N_number)
-            elif 60000 < n <= 90000:
-                if len(circrna) <= 500:
-                    self.genome_2 += (circrna.seq * 2 + polyN)
-                    self.increase_length += len(circrna) * 2 + N_number
-                else:
-                    self.genome_2 += (circrna.seq[-500:] + circrna.seq[:500] + polyN)
-                    self.increase_length += (1000+N_number)
+            print('No.', n, 'length:', len(circrna))
+
+            if len(circrna) <= 500:
+                seq_piece = str(circrna.seq * 2 + polyN)
+                self.increase_length += len(circrna) * 2 + N_number
             else:
-                if len(circrna) <= 500:
-                    self.genome_3 += (circrna.seq * 2 + polyN)
-                    self.increase_length += len(circrna) * 2 + N_number
-                else:
-                    self.genome_3 += (circrna.seq[-500:] + circrna.seq[:500] + polyN)
-                    self.increase_length += (1000+N_number)
-
-
+                seq_piece = str(circrna.seq[-500:] + circrna.seq[:500] + polyN)
+                self.increase_length += 1000 + N_number
+            self.genome_parts.append(seq_piece)
 
             if n == 1:
                 start_position = 1
@@ -133,30 +72,21 @@ class Genome(object):
 
             if len(circrna) <= 500:
                 jun = int(start_position + len(circrna))
-                self.junction.append(start_position + len(circrna))
-                self.junction_name_dic[jun] = str(circrna.id)
             else:
                 jun = int(start_position + 500)
-                self.junction.append(start_position + 500)
-                self.junction_name_dic[jun] = str(circrna.id)
+            self.junction.append(jun)
+            self.junction_name_dic[jun] = str(circrna.id)
 
-            self.start.append(start_position)
-            self.start.append(start_position)
-            self.start.append(start_position)
+            self.start.extend([start_position] * 3)
+            self.end.extend([end_position] * 3)
+            self.gene_type.extend(['gene', 'transcript', 'exon'])
 
-            self.end.append(end_position)
-            self.end.append(end_position)
-            self.end.append(end_position)
-
-            self.gene_type.append('gene')
-            self.gene_type.append('transcript')
-            self.gene_type.append('exon')
-        self.genome = self.genome+self.genome_1+self.genome_2+self.genome_3
-        final_genome = SeqRecord(Seq(str(self.genome)), id='1_CircularRNA', description='DoubleSeqWith50N')
+        self.genome = ''.join(self.genome_parts)
+        final_genome = SeqRecord(Seq(self.genome), id='1_CircularRNA', description='DoubleSeqWith50N')
 
         self.newGenome.append(final_genome)
 
-        # Dump junction into tem file
+        # Dump junction into temp file
         pickle.dump(self.junction, open('{}/junction'.format(self.tmp_file_location), 'wb'))
         pickle.dump(self.junction_name_dic, open('{}/junction_name_dic'.format(self.tmp_file_location), 'wb'))
 
@@ -179,11 +109,7 @@ class Genome(object):
         SeqIO.write(self.newGenome, name, 'fasta')
 
     def to_gff(self, name):
-        newlist = []
-        for i in self.junction:
-            newlist.append(i)
-            newlist.append(i)
-            newlist.append(i)
+        newlist = [j for j in self.junction for _ in range(3)]
         self.gff['junction'] = newlist
         self.gff.to_csv(name, sep='\t', header=False, index=False, escapechar='"', doublequote=0)
         subprocess.call('sed -i \'s/""/"/g\' {}'.format(name), shell=True)
@@ -197,13 +123,13 @@ def main():
 
     yamlfile = args.yaml
     file = open(yamlfile)
-    fileload = yaml.load(file)
+    fileload = yaml.safe_load(file)
     tmp_file_location = fileload['tmp_file_location']
     circ_rnas_file = fileload['circrnas']
     name = fileload['genome_name']
     try:
-        subprocess.call('mkdir -p {}'.format(tmp_file_location), shell=True)
-    except:
+        os.makedirs(tmp_file_location, exist_ok=True)
+    except Exception:
         print('Error during make new dir.')
     circ_rnas = SeqIO.parse(circ_rnas_file, 'fasta')
     info = Genome(circ_rnas, tmp_file_location)
