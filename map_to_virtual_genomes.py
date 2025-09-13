@@ -6,155 +6,194 @@ import argparse
 import yaml
 import pickle
 import pandas as pd
-import time
 import os
+from pathlib import Path
 from multiprocessing import Pool
 
 
 # make index of genome and ribo-seq reads
 def make_index(thread, genome, ribosome, tmp_file_location, genome_fasta, name):
-    ribo_name = str(ribosome).split('/')[-1].split('.')[0]
-    genomename = str(genome).split('/')[-1].split('.')[0]
-    ribo_name = str(ribosome).split('/')[-1].split('.')[0]
+    """Build genome and rRNA indices required for downstream mapping."""
+    tmp_path = Path(tmp_file_location)
+    genome = Path(genome)
+    ribosome = Path(ribosome)
+    genome_fasta = Path(genome_fasta)
+    ribo_name = ribosome.stem
 
-    print('STAR --runThreadN {} --runMode genomeGenerate --genomeDir {} --genomeFastaFiles {}'.format(thread,tmp_file_location+'/',genome))
+    print(
+        'STAR --runThreadN {} --runMode genomeGenerate --genomeDir {} --genomeFastaFiles {}'.format(
+            thread, tmp_path / '', genome
+        )
+    )
 
-    subprocess.call('./requiredSoft/STAR --runThreadN {} --runMode genomeGenerate --genomeDir {} --genomeFastaFiles {}'.format(thread,tmp_file_location+'/',genome),shell=True)
+    subprocess.call(
+        './requiredSoft/STAR --runThreadN {} --runMode genomeGenerate --genomeDir {} --genomeFastaFiles {}'.format(
+            thread, tmp_path / '', genome
+        ),
+        shell=True,
+    )
 
-    subprocess.call('bowtie-build --threads {} {} {}/{}'
-                    .format(thread, ribosome, tmp_file_location, ribo_name),
-                    shell=True, stdout=False)
+    subprocess.call(
+        'bowtie-build --threads {} {} {}/{}'.format(thread, ribosome, tmp_path, ribo_name),
+        shell=True,
+        stdout=False,
+    )
 
-    subprocess.call('bowtie-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_file_location,genome_fasta.split('/')[-1]),shell=True)
+    subprocess.call(
+        'bowtie-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_path, genome_fasta.name),
+        shell=True,
+    )
 
-    print('bowtie-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_file_location, genome_fasta.split('/')[-1]))
+    print('bowtie-build --threads {} {} {}/{}'.format(thread, genome_fasta, tmp_path, genome_fasta.name))
     print('-' * 100)
     print(get_time(), 'Make index successfully!')
     print('-' * 100)
 
-def deal_raw_data(genome, raw_read, ribosome, thread, trimmomatic, riboseq_adapters, tmp_file_location,genome_fasta,ribotype):
+def deal_raw_data(
+    genome,
+    raw_read,
+    ribosome,
+    thread,
+    trimmomatic,
+    riboseq_adapters,
+    tmp_file_location,
+    genome_fasta,
+    ribotype,
+):
     print(get_time(), 'Start cleaning rawreads...')
+    tmp_path = Path(tmp_file_location)
+    ribo_name = Path(ribosome).stem
+
     if ribotype == 'sra':
-    	read_name = raw_read.split('/')[-1].split('.')[-2]
+        read_name = Path(raw_read).stem
+        subprocess.call('fastq-dump {} -O {}'.format(raw_read, tmp_file_location), shell=True)
+        input_fastq = tmp_path / f'{read_name}.fastq'
     elif ribotype == 'fastq.gz':
-    	read_name = raw_read.split('/')[-1].split('.')[-3]
-    ribo_name = str(ribosome).split('/')[-1].split('.')[0]
-    without_rrna_reads = read_name+'.clean.without.rRNA.fastq'
-    unmaped_reads = read_name+'.clean.without.rRNA.unmapped.fastq'
+        read_name = Path(raw_read).name.replace('.fastq.gz', '')
+        input_fastq = raw_read
+    else:
+        read_name = Path(raw_read).stem
+        input_fastq = raw_read
+
+    without_rrna_reads = f'{read_name}.clean.without.rRNA.fastq'
+    unmaped_reads = f'{read_name}.clean.without.rRNA.unmapped.fastq'
+    clean_fastq = tmp_path / f'{read_name}.clean.fastq'
+
     print(get_time(), 'Loading reads form:', raw_read)
     print('-' * 100)
 
-    # Transform sra to fastq format
-    if ribotype == 'sra':
-    	subprocess.call('fastq-dump {} -O {}'
-		            .format(raw_read,
-		                    tmp_file_location),
-		            shell=True)
-    else:
-        pass
-	    
-    # Filter out low quality reads by Trimmomatic
-    if ribotype == 'sra':
-    	subprocess.call('java -jar {} SE -threads {} -phred33 '
-		            '{} {} ILLUMINACLIP:{}:2:30:10 '
-		            'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
-		            .format(trimmomatic,thread,
-		                    tmp_file_location+'/'+read_name+'.fastq',
-		                    tmp_file_location+'/'+read_name+'.clean.fastq',
-		                    riboseq_adapters),
-		            shell=True)
-	    
-    elif ribotype == 'fastq.gz':
-    	subprocess.call('java -jar {} SE -threads {} -phred33 '
-		            '{} {} ILLUMINACLIP:{}:2:30:10 '
-		            'LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'
-		            .format(trimmomatic,thread,
-		                    raw_read,
-		                    tmp_file_location+'/'+read_name+'.clean.fastq',
-		                    riboseq_adapters),
-		            shell=True)
+    subprocess.call(
+        'java -jar {} SE -threads {} -phred33 {} {} '
+        'ILLUMINACLIP:{}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:16'.format(
+            trimmomatic, thread, input_fastq, clean_fastq, riboseq_adapters
+        ),
+        shell=True,
+    )
     		            
     
     # Map clean reads to ribosome sequence by bowtie
     print('remove rRNA')
-    subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_rRNA.sam'
-                    .format(thread, tmp_file_location+'/'+without_rrna_reads,
-                            tmp_file_location+'/'+ribo_name,
-                            tmp_file_location+'/'+read_name+'.clean.fastq',
-                            tmp_file_location+'/'+ribo_name),
-                    shell=True)
+    subprocess.call(
+        'bowtie -p {} -norc --un {} {} {} > {}.map_to_rRNA.sam'.format(
+            thread,
+            tmp_path / without_rrna_reads,
+            tmp_path / ribo_name,
+            clean_fastq,
+            tmp_path / ribo_name,
+        ),
+        shell=True,
+    )
     print('remove liner sequence')
-    print('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread,
-                                                                           tmp_file_location+'/'+unmaped_reads,
-                                                                           tmp_file_location+'/'+genome_fasta.split('/')[-1],
-                                                                           tmp_file_location+'/'+without_rrna_reads,
-                                                                           tmp_file_location+'/'+ribo_name))
+    print(
+        'bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(
+            thread,
+            tmp_path / unmaped_reads,
+            tmp_path / Path(genome_fasta).name,
+            tmp_path / without_rrna_reads,
+            tmp_path / ribo_name,
+        )
+    )
 
-    subprocess.call('bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(thread,
-                                                                                     tmp_file_location+'/'+unmaped_reads,
-                                                                                     tmp_file_location+'/'+genome_fasta.split('/')[-1],
-                                                                                     tmp_file_location+'/'+without_rrna_reads,
-                                                                                     tmp_file_location+'/'+ribo_name),shell=True)
+    subprocess.call(
+        'bowtie -p {} -norc --un {} {} {} > {}.map_to_genome.sam'.format(
+            thread,
+            tmp_path / unmaped_reads,
+            tmp_path / Path(genome_fasta).name,
+            tmp_path / without_rrna_reads,
+            tmp_path / ribo_name,
+        ),
+        shell=True,
+    )
 
     print('-' * 100)
     print(get_time(), 'Finished clean process.')
     print('-' * 100)
     global cleanreads
-    cleanreads = tmp_file_location+'/'+unmaped_reads
+    cleanreads = str(tmp_path / unmaped_reads)
 
     genome_name = str(genome).split('/')[-1].split('.')[0]
     print(get_time(), 'Start mapping...')
     print('command:')
-    print('./requiredSoft/STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'
-	  .format(thread,tmp_file_location+'/',
-		  tmp_file_location+'/'+unmaped_reads,tmp_file_location+'/all_bam/'+read_name))
+    print(
+        './requiredSoft/STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'.format(
+            thread,
+            tmp_path / '',
+            tmp_path / unmaped_reads,
+            tmp_path / 'all_bam' / read_name,
+        )
+    )
     # Path to tophat2 result:
     tophat_result = tmp_file_location+'/'+read_name+'_tophat_result'
 
-    subprocess.call('./requiredSoft/STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'
-		    .format(thread,tmp_file_location+'/',
-			    tmp_file_location+'/'+unmaped_reads,
-			    tmp_file_location+'/all_bam/'+read_name),
-                    shell=True)
+    subprocess.call(
+        './requiredSoft/STAR --runThreadN {} --outSAMtype BAM SortedByCoordinate --alignIntronMax 10 --genomeDir {} --readFilesIn {} --outFileNamePrefix {}'.format(
+            thread,
+            tmp_path / '',
+            tmp_path / unmaped_reads,
+            tmp_path / 'all_bam' / read_name,
+        ),
+        shell=True,
+    )
 
     print(get_time(), 'Finished mapping')
     print('-'*100)    
     print(get_time(), 'Start analysing...')
 
 
-def find_reads_on_junction(tmp_file_location,merge_result_name):
-    jun_name_dic_pickle = pickle.load(open(tmp_file_location+'/junction_name_dic','rb'))
-    result = pd.DataFrame(columns=['a', 'b', 'c', 'd'])
-    junction_file = tmp_file_location+'/junction'
-    merge_result_file = tmp_file_location+'/'+merge_result_name
+def find_reads_on_junction(tmp_file_location, merge_result_name):
+    tmp_path = Path(tmp_file_location)
+    with open(tmp_path / 'junction_name_dic', 'rb') as f:
+        jun_name_dic = pickle.load(f)
+
+    merge_result_file = tmp_path / merge_result_name
+    junction_file = tmp_path / 'junction'
+
+    merge_result = pd.read_csv(merge_result_file, sep='\t', header=None, names=['a', 'b', 'c', 'd'])
+    with open(junction_file, 'rb') as f:
+        junction = pickle.load(f)
+
     reads_jun = []
-    merge_result = pd.read_csv(merge_result_file, sep='\t', low_memory=True, header=None)
-    merge_result.columns = ['a', 'b', 'c', 'd']
-    junction = pickle.load(open(junction_file, 'rb'))
-    
     circ_id = []
-    
-    for i in junction:
-        if merge_result.loc[(merge_result.b < i) & (i < merge_result.c)].empty:
-            pass
-        else:
-            result = result.append(merge_result.loc[(merge_result.b < i) & (i < merge_result.c)])
-            reads_jun.append(i)
-            tmp_id = jun_name_dic_pickle[i]
-            circ_id.append(tmp_id)
+    frames = []
 
+    for j in junction:
+        matches = merge_result[(merge_result.b < j) & (j < merge_result.c)]
+        if not matches.empty:
+            frames.append(matches)
+            reads_jun.append(j)
+            circ_id.append(jun_name_dic[j])
 
+    result = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=['a', 'b', 'c', 'd'])
 
     print('dump data...')
     try:
-        pickle.dump(circ_id, open(tmp_file_location+'/'+merge_result_name+'.trans_circ_id', 'wb'))
-        pickle.dump(result, open(tmp_file_location+'/'+merge_result_name+'.RCRJ_result', 'wb'))
-        pickle.dump(reads_jun, open(tmp_file_location+'/'+merge_result_name+'.reads_jun', 'wb'))
-        
-    except:
-        print('Error while dumping RCRJ_result')
+        pickle.dump(circ_id, open(tmp_path / f'{merge_result_name}.trans_circ_id', 'wb'))
+        pickle.dump(result, open(tmp_path / f'{merge_result_name}.RCRJ_result', 'wb'))
+        pickle.dump(reads_jun, open(tmp_path / f'{merge_result_name}.reads_jun', 'wb'))
+    except Exception as exc:
+        print('Error while dumping RCRJ_result', exc)
 
-    result.to_csv(tmp_file_location+'/'+merge_result_name+'.RCRJ_result.csv', sep='\t', header=0, index=False)
+    result.to_csv(tmp_path / f'{merge_result_name}.RCRJ_result.csv', sep='\t', header=0, index=False)
     print('find_reads_on_junction finashed. ')
 
 def remove_tmp_file():
