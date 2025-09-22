@@ -1,4 +1,4 @@
-#!usr/bin/python3
+#!/usr/bin/env python3
 
 import yaml
 import pickle
@@ -8,99 +8,109 @@ import subprocess
 import os
 
 from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 
-import time
-class Translate(object):
-
-    def __init__(self, file, tmp_file_location):
-        self.file = file
-        self.tmp_file_location = tmp_file_location
-
-    def translate(self):
-        seqs = SeqIO.parse(self.file, 'fasta')
-        translated_seqs_1 = []
-        translated_seqs_2 = []
-        translated_seqs_3 = []
-        for seq in seqs:
-
-            seq_record_1 = SeqRecord(Seq(str(seq.translate().seq)), id=seq.id,description=seq.description)
-            seq_record_2 = SeqRecord(Seq(str(seq[1:].translate().seq)), id=seq.id, description=seq.description)
-            seq_record_3 = SeqRecord(Seq(str(seq[2:].translate().seq)), id=seq.id, description=seq.description)
-
-            translated_seqs_1.append(seq_record_1)
-            translated_seqs_2.append(seq_record_2)
-            translated_seqs_3.append(seq_record_3)
-
-        SeqIO.write(translated_seqs_1, '{}/RCRJ_translated_1.fa'.format(self.tmp_file_location), 'fasta')
-        SeqIO.write(translated_seqs_2, '{}/RCRJ_translated_2.fa'.format(self.tmp_file_location), 'fasta')
-        SeqIO.write(translated_seqs_3, '{}/RCRJ_translated_3.fa'.format(self.tmp_file_location), 'fasta')
 
 # Use R language to call BASiNET to classify sequences.
 # MODEL = RF
 # CALL = R LANGUAGE
 
-def classify(coding_seq,
-             non_coding_seq, 
-             tmp_file_location,
-             name,
-             coverage_counts,
-             rcrj, 
-             merge, 
-             circrnas,
-             result_file_location,
-             use_classify):
-             
-    tmp = tmp_file_location+'/'+'tmp_file'
-    circ = tmp_file_location+'/'+name+'.fa'
-    print(circ)
-    RCRJ = tmp_file_location+'/'+rcrj+'_RCRJ.fa'
-    
-    subprocess.call('''awk '$4>{} {}' {} > {}'''.format(coverage_counts,'{print $0}',tmp_file_location+'/'+rcrj, tmp_file_location+'/'+rcrj+'.junction_filter_result'), shell=True)
-    
-    #getfasta
-    subprocess.call('bedtools getfasta -s -fi {} -bed {} -split | fold -w 60 > {}'
-    .format(circ,tmp_file_location+'/'+rcrj+'.junction_filter_result',RCRJ),shell=True)
 
+def classify(
+    coding_seq,
+    non_coding_seq,
+    tmp_file_location,
+    name,
+    coverage_counts,
+    rcrj,
+    merge,
+    circrnas,
+    result_file_location,
+    use_classify,
+):
+
+    tmp = os.path.join(tmp_file_location, 'tmp_file')
+    circ = os.path.join(tmp_file_location, f'{name}.fa')
+    print(circ)
+    RCRJ = os.path.join(tmp_file_location, f'{rcrj}_RCRJ.fa')
+
+    subprocess.call(
+        '''awk '$4>{} {}' {} > {}'''.format(
+            coverage_counts,
+            '{print $0}',
+            os.path.join(tmp_file_location, rcrj),
+            os.path.join(tmp_file_location, f'{rcrj}.junction_filter_result'),
+        ),
+        shell=True,
+    )
+
+    # getfasta
+    subprocess.call(
+        'bedtools getfasta -s -fi {} -bed {} -split | fold -w 60 > {}'.format(
+            circ,
+            os.path.join(tmp_file_location, f'{rcrj}.junction_filter_result'),
+            RCRJ,
+        ),
+        shell=True,
+    )
 
     r_script = '''
     library(Biostrings)
     library(BASiNET)
-    
+
     lncRNA <- system.file("extdata", "sequences.fasta", package = "BASiNET")
     classification(mRNA='{}',
                    lncRNA='{}', save='{}')
     lncRNA <- system.file("extdata", "sequences.fasta", package = "BASiNET")
     print('Make model successfully!')
     a <- classification('{}',lncRNA,load="{}")
-    
+
     junction_seq=readDNAStringSet('{}')
     number <- which(a[1:length(junction_seq)]=='mRNA')
     mRNA_seq <- junction_seq[number]
-    
+
     writeXStringSet(mRNA_seq,filepath = '{}')
     print(length(mRNA_seq))
-    '''.format(coding_seq, 
-               non_coding_seq, 
-               tmp, RCRJ, tmp+'.dat', 
-               RCRJ, 
-               tmp_file_location+'/'+rcrj+'_translated_circ.fa')
-    
-    
+    '''.format(
+        coding_seq,
+        non_coding_seq,
+        tmp,
+        RCRJ,
+        tmp + '.dat',
+        RCRJ,
+        os.path.join(tmp_file_location, f'{rcrj}_translated_circ.fa'),
+    )
+
     if use_classify == 'T':
-        f = open(tmp_file_location+'/{}_rscript.r'.format(rcrj),'w')
+        f = open(os.path.join(tmp_file_location, f'{rcrj}_rscript.r'), 'w')
         f.write(r_script)
         f.close()
-        subprocess.call('Rscript '+tmp_file_location+'/{}_rscript.r'.format(rcrj), shell=True)
+        subprocess.call(
+            'Rscript ' + os.path.join(tmp_file_location, f'{rcrj}_rscript.r'),
+            shell=True,
+        )
         print('Classify successfully!')
     else:
-        subprocess.call('mv {} {}'.format(RCRJ, tmp_file_location+'/'+rcrj+'_translated_circ.fa'),shell=True)
-    
-    subprocess.call('''sed -i 's/()//g' {}'''.format(tmp_file_location+'/'+rcrj+'_translated_circ.fa'),shell=True)
-    final_trans_file = tmp_file_location+'/'+rcrj+'_translated_circ.fa'
+        subprocess.call(
+            'mv {} {}'.format(
+                RCRJ,
+                os.path.join(tmp_file_location, f'{rcrj}_translated_circ.fa'),
+            ),
+            shell=True,
+        )
+
+    subprocess.call(
+        '''sed -i 's/()//g' {}'''.format(
+            os.path.join(tmp_file_location, f'{rcrj}_translated_circ.fa')
+        ),
+        shell=True,
+    )
+    final_trans_file = os.path.join(
+        tmp_file_location, f'{rcrj}_translated_circ.fa'
+    )
     seqs = SeqIO.parse(final_trans_file, 'fasta')
-    id_dic = pickle.load(open(tmp_file_location+'/junction_name_dic','rb'))
+    id_dic = pickle.load(
+        open(os.path.join(tmp_file_location, 'junction_name_dic'), 'rb')
+    )
     translated_circ_id_list = []
     for seq in seqs:
         for i in id_dic:
@@ -116,215 +126,40 @@ def classify(coding_seq,
             final_trans_circ_seq.append(i)
             print(i)
     fastqid = rcrj.split('A')[0]
-    
-    final_trans_circ_seq_name = result_file_location+'/'+fastqid+'.fa'
-    subprocess.call('mkdir -p {}'.format(result_file_location),shell=True)
+
+    final_trans_circ_seq_name = os.path.join(
+        result_file_location, f'{fastqid}.fa'
+    )
+    subprocess.call('mkdir -p {}'.format(result_file_location), shell=True)
     SeqIO.write(final_trans_circ_seq, final_trans_circ_seq_name, 'fasta')
 
 
-
-
-# Find the longest peptide that can be translated from the three reading frames
-def find_longest(tmp_file_location, 
-                 raw_read, 
-                 result_file_location, 
-                 number):
-
-    trans_seq = tmp_file_location+'/'+'RCRJ_translated_{}.fa'.format(number)
-    junction = pickle.load(open('{}'.format(tmp_file_location+'/'+'junction'), 'rb'))
-    seqs = SeqIO.parse('{}'.format(trans_seq), 'fasta')
-    
-    # The format are showed follow:
-    # position:
-    position = []
-
-    # stop_coden: {junction_1:[position_1 of '*' in sequence, position_2 of '*' in sequence...]...}
-    stop_coden = {}
-
-    # junction_dic: {junction_1:[start position, end position]...}
-    junction_dic = {}
-
-    # id_dic: {junction_1:[seq.id]...}
-    id_dic = {}
-    
-    #length_dic is a dic to storage the length of each circRNA.
-    length_dic = {}
-    
-    # tmp is a list to storage the position.
-    tmp = []
-    # n is the counter of this step.
-    n = 1
-    for seq in seqs:
-        for i in re.finditer('\*', str(seq.seq)):
-            tmp.append(i.start())
-        # Link the junction to the start and end position with dic
-        for jun in junction:
-            # Get the start position and end position from seq.id
-            start = seq.id.split(':')[-1].split('-')[0]
-            end = seq.id.split(':')[-1].split('-')[1]
-            if int(start) < int(jun) < int(end):
-                length_dic[seq.id] = len(seq.seq)
-                id_dic[jun] = str(seq.id)
-                junction_dic[jun] = [int(start), int(end)]
-                # Store location information for stop codons in each sequence
-                stop_coden[jun] = tmp
-                # Empty the temporary list
-                tmp = []
-                continue
-        #print('step1:', n)
-        n += 1
-    print('step1 finashed!')
-    print('-' * 100)
-    # peptide_position:{junction_1:[peptide_start_position,peptide_end_position]...}
-    peptide_position = {}
-    # same as list tmp
-    tmp_2 = []
-    
-    #print(junction_dic)
-    #print(stop_coden)
-    
-    n = 1
-    for i in junction_dic:
-        p = int((int(i) - int(junction_dic[i][0]) + 1) / 3)
-        #print('p:', p)
-        if len(stop_coden[i]) == 0:
-            peptide_position[i] = tmp_2
-            tmp_2 = []
-        elif len(stop_coden[i]) == 1:
-            if p < stop_coden[i][0]:
-                tmp_2.append('front')
-                tmp_2.append(stop_coden[i][0])
-                peptide_position[i] = tmp_2
-                tmp_2 = []
-            elif stop_coden[i][0] < p:
-
-                tmp_2.append('back')
-                tmp_2.append(stop_coden[i][0])
-                peptide_position[i] = tmp_2
-                tmp_2 = []
-            elif stop_coden[i][0] == p:
-                tmp_2.append('drop')
-                peptide_position[i] = tmp_2
-                tmp_2 = []
-
-        else:
-            for index, j in enumerate(stop_coden[i]):
-                try:
-                    if stop_coden[i][index] < p < stop_coden[i][index + 1] + 1:
-                        tmp_2.append(stop_coden[i][index])
-                        tmp_2.append(stop_coden[i][index + 1])
-                        peptide_position[i] = tmp_2
-                        tmp_2 = []
-                        break
-                    elif p < stop_coden[i][0]:
-                        tmp_2.append('front')
-                        tmp_2.append(stop_coden[i][index])
-                        peptide_position[i] = tmp_2
-                        tmp_2 = []
-                        break
-                    elif stop_coden[i][-1] < p:
-                        #print(stop_coden[i][-1])
-                        tmp_2.append('back')
-                        tmp_2.append(stop_coden[i][-1])
-                        #print(tmp_2)
-                        peptide_position[i] = tmp_2
-                        tmp_2 = []
-                        break
-                    elif stop_coden[i][index] == p:
-                        tmp_2.append('drop')
-                        peptide_position[i] = tmp_2
-                        tmp_2 = []
-                        break
-                    else:
-                        pass
-                except:
-                    print('WARNNING')
-            #print('pep:', peptide_position)
-            tmp_2 = []
-
-        #print('step2:', n)
-        n += 1
-    final_dic = {}
-    #print(peptide_position)
-    print('-' * 100)
-    for i in peptide_position:
-        for j in id_dic:
-            if str(i) == str(j):
-                final_dic[id_dic[i]] = peptide_position[i]
-    # ----------------------------------------------------
-    # pickle.dump(self.junction, open('junction', 'wb'))
-    # pickle.dump(final_dic, open('final_dic', 'wb'))
-    # pickle.dump(length_dic, open('length_dic', 'wb'))
-    #
-    # final_dic = pickle.load(open('final_dic', 'rb'))
-    # length_dic = pickle.load(open('length_dic', 'rb'))
-    # final_genome = SeqRecord(Seq(str(self.genome)), id='1_CircularRNA', description='DoubleSeqWith50N')
-    # -----------------------------------------------------
-    seq_list = []
-    #print('step3')
-    seqs = SeqIO.parse('{}'.format(trans_seq), 'fasta')
-    #print(final_dic)
-
-    for seq in seqs:
-        print(seq.id)
-        print(len(final_dic[seq.id]))
-     
-        if len(final_dic[seq.id]) == 0:
-            seq_list.append(SeqRecord(Seq(str(seq.seq)),
-                                      id=str(seq.id),
-                                      description='peptides:' + str(len(seq.seq)) + '/' + str(length_dic[seq.id])))
-        else:
-            if final_dic[seq.id][0] == 'front':
-                seq_list.append(SeqRecord(Seq(str(seq.seq[1:final_dic[seq.id][1]])),
-                                          id=str(seq.id),
-                                          description='peptides:' + str(
-                                              len(seq.seq[1:final_dic[seq.id][1]])) + '/' + str(length_dic[seq.id])))
-            elif final_dic[seq.id][0] == 'back':
-                seq_list.append(SeqRecord(Seq(str(seq.seq[final_dic[seq.id][-1] + 1:])),
-                                          id=str(seq.id),
-                                          description='peptides:' + str(
-                                              len(seq.seq[final_dic[seq.id][1] + 1:])) + '/' + str(length_dic[seq.id])))
-            elif final_dic[seq.id][0] == 'drop':
-                pass
-            elif final_dic[seq.id] == []:
-                seq_list.append(SeqRecord(Seq(str(seq.seq)),
-                                          id=str(seq.id),
-                                          description='peptides:' + str(len(seq.seq)) + '/' + str(length_dic[seq.id])))
-            else:
-                seq_list.append(SeqRecord(Seq(str(seq.seq[final_dic[seq.id][0] + 1:final_dic[seq.id][1]])),
-                                          id=str(seq.id),
-                                          description='peptides:' + str(
-                                              len(seq.seq[final_dic[seq.id][0] + 1:final_dic[seq.id][1]])) + '/' + str(
-                                              length_dic[seq.id])))
-
-    #print(seq_list)
-
-
-    # Output finally result:
-    reads_jun = list(peptide_position.keys())
-    print(len(reads_jun))
-    pickle.dump(reads_jun, open('{}/reads_jun'.format(tmp_file_location),'wb'))
-    SeqIO.write(seq_list, '{}'.format(tmp_file_location+'/'+'result_pep_{}.fa'.format(number)), 'fasta')
-
-
 def fgs(result_file_location):
-    fa_list = list(filter(lambda x:x[-3:]=='.fa',os.listdir(result_file_location)))
+    fa_list = [f for f in os.listdir(result_file_location) if f.endswith('.fa')]
     for i in fa_list:
-        subprocess.call('./requiredSoft/FragGeneScan -s {} -o {} -w 0 -t complete'
-                    .format(result_file_location+'/'+i,
-                            result_file_location+'/'+i.split('.')[0]+'_translated_peptides.fa'),
-                    shell=True)
+        subprocess.call(
+            './requiredSoft/FragGeneScan -s {} -o {} -w 0 -t complete'.format(
+                os.path.join(result_file_location, i),
+                os.path.join(
+                    result_file_location,
+                    i.split('.')[0] + '_translated_peptides.fa',
+                ),
+            ),
+            shell=True,
+        )
 
 
 def main():
-    parse = argparse.ArgumentParser(description='This script helps to clean reads and map to genome')
+    parse = argparse.ArgumentParser(
+        description='This script helps to clean reads and map to genome'
+    )
     parse.add_argument('-y', dest="yaml", required=True)
     parse.add_argument('-map-only', dest='map_only', required=False)
     args = parse.parse_args()
 
     yamlfile = args.yaml
     file = open(yamlfile)
-    fileload = yaml.load(file)
+    fileload = yaml.safe_load(file)
     name = fileload['genome_name']
     tmp_file_location = fileload['tmp_file_location']
     coding_seq = fileload['coding_seq']
@@ -334,36 +169,43 @@ def main():
     coverage_counts = fileload['coverage_counts']
     merge = fileload['merge']
     circrnas = fileload['circrnas']
-    result_file_location = fileload['result_file_location']
     use_classify = fileload['classify']
-    
 
     if merge == 'T':
-    	classify(coding_seq,
-                 non_coding_seq, 
-                 tmp_file_location,
-                 name,
-                 coverage_counts, 
-                 rcrj, 
-                 merge,
-                 circrnas,
-                 result_file_location,
-                 use_classify)
+        rcrj = "merge_result.RCRJ_result.csv"
+        classify(
+            coding_seq,
+            non_coding_seq,
+            tmp_file_location,
+            name,
+            coverage_counts,
+            rcrj,
+            merge,
+            circrnas,
+            result_file_location,
+            use_classify,
+        )
     else:
-    	rcrj_results = list(filter(lambda x:x[-15:] == 'RCRJ_result.csv', os.listdir(tmp_file_location)))
-    	for rcrj in rcrj_results:
-    		classify(coding_seq, 
-                     non_coding_seq, 
-                     tmp_file_location, 
-                     name, 
-                     coverage_counts, 
-                     rcrj, 
-                     merge,circrnas,
-                     result_file_location,
-                     use_classify)
-    
-    fgs(result_file_location)    
-    
+        rcrj_results = [
+            f for f in os.listdir(tmp_file_location) if f.endswith('RCRJ_result.csv')
+        ]
+        for rcrj in rcrj_results:
+            classify(
+                coding_seq,
+                non_coding_seq,
+                tmp_file_location,
+                name,
+                coverage_counts,
+                rcrj,
+                merge,
+                circrnas,
+                result_file_location,
+                use_classify,
+            )
+
+    fgs(result_file_location)
+
 
 if __name__ == '__main__':
     main()
+
