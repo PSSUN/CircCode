@@ -125,7 +125,12 @@ def classify(
         if i.id in translated_circ_id_list:
             final_trans_circ_seq.append(i)
             print(i)
-    fastqid = rcrj.split('A')[0]
+    base_name = rcrj.replace('.RCRJ_result.csv', '')
+    suffix = 'Aligned.sortedByCoord.out.bam.merge_result'
+    if base_name.endswith(suffix):
+        fastqid = base_name[: -len(suffix)]
+    else:
+        fastqid = base_name
 
     final_trans_circ_seq_name = os.path.join(
         result_file_location, f'{fastqid}.fa'

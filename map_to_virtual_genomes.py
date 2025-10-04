@@ -36,7 +36,8 @@ def make_index(thread, genome, ribosome, tmp_file_location, genome_fasta, name):
     subprocess.call(
         'bowtie-build --threads {} {} {}/{}'.format(thread, ribosome, tmp_path, ribo_name),
         shell=True,
-        stdout=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
     )
 
     subprocess.call(
